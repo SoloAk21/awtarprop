@@ -8,6 +8,7 @@ import { prisma } from "./config/db.js";
 import { logger } from "./utils/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { NotFoundError } from "./errors/AppError.js";
+import authRoutes from "./modules/auth/auth.routes.js";
 import { ETHIOPIAN_REGIONS } from "@awtarprop/shared";
 
 const app: Express = express();
@@ -30,7 +31,10 @@ const limiter = rateLimit({
 });
 app.use("/api", limiter);
 
-// Health Check Endpoint (Includes DB ping)
+// Mount Modular API Routes
+app.use("/api/v1/auth", authRoutes);
+
+// Health Check Endpoint
 app.get("/api/v1/health", async (req: Request, res: Response, next) => {
   try {
     let dbStatus = "disconnected";

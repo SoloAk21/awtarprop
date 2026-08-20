@@ -1,6 +1,13 @@
-export type UserRole = 'USER' | 'ADMIN' | 'MODERATOR';
+export type UserRole = "USER" | "ADMIN" | "MODERATOR";
 
-export type ProviderType = 'OWNER' | 'BROKER' | 'AGENT' | 'AGENCY' | 'DEVELOPER';
+export type ProviderType =
+  | "OWNER"
+  | "BROKER"
+  | "AGENT"
+  | "AGENCY"
+  | "DEVELOPER";
+
+export type PreferredLanguage = "EN" | "AM";
 
 export interface TelegramUser {
   id: number;
@@ -18,10 +25,10 @@ export interface UserProfile {
   lastName?: string;
   username?: string;
   phoneNumber?: string;
-  isPhoneVerified: boolean;
+  isPhoneVerified: Boolean;
   role: UserRole;
   providerType: ProviderType;
-  preferredLanguage: 'EN' | 'AM';
+  preferredLanguage: PreferredLanguage;
   createdAt: string;
   updatedAt: string;
 }
