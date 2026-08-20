@@ -1,54 +1,44 @@
-import { useEffect } from "react";
-import { ETHIOPIAN_REGIONS } from "@awtarprop/shared";
-import { Building2, MapPin, ShieldCheck } from "lucide-react";
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Header } from './components/Header.js';
+import { BottomNav } from './components/BottomNav.js';
+import { HomePage } from './pages/HomePage.js';
+import { ExplorePage } from './pages/ExplorePage.js';
+import { PostPropertyPage } from './pages/PostPropertyPage.js';
+import { ProfilePage } from './pages/ProfilePage.js';
+import { useAuthStore } from './store/useAuthStore.js';
 
 export function App() {
+  const authenticateTelegram = useAuthStore(
+    (state) => state.authenticateTelegram
+  );
+
   useEffect(() => {
     if (window.Telegram?.WebApp) {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
     }
-  }, []);
+
+    authenticateTelegram();
+  }, [authenticateTelegram]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between p-4 max-w-md mx-auto">
-      <header className="py-6 text-center border-b border-slate-200">
-        <div className="inline-flex items-center gap-2 text-emerald-600 font-bold text-2xl tracking-tight">
-          <Building2 className="w-8 h-8" />
-          <span>AwtarProp</span>
-        </div>
-        <p className="text-sm text-slate-500 mt-1 font-medium">
-          Ethiopia Direct Property & Land Marketplace
-        </p>
-      </header>
+    <BrowserRouter>
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col max-w-md mx-auto relative border-x border-slate-200">
+        <Header />
 
-      <main className="my-auto space-y-6 py-6">
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 space-y-3">
-          <div className="flex items-center gap-3 text-slate-800 font-semibold">
-            <ShieldCheck className="text-emerald-500 w-5 h-5" />
-            <span>Direct Marketplace</span>
-          </div>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Supporting Owners, Brokers, Agents, Agencies & Developers with
-            direct property listings across Ethiopia.
-          </p>
-        </div>
+        <main className="flex-1">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/post" element={<PostPropertyPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+          </Routes>
+        </main>
 
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 space-y-3">
-          <div className="flex items-center gap-3 text-slate-800 font-semibold">
-            <MapPin className="text-emerald-500 w-5 h-5" />
-            <span>Supported Regions ({ETHIOPIAN_REGIONS.length})</span>
-          </div>
-          <p className="text-xs text-slate-500">
-            {ETHIOPIAN_REGIONS.slice(0, 5).join(", ")} and more...
-          </p>
-        </div>
-      </main>
-
-      <footer className="text-center py-4 text-xs text-slate-400 border-t border-slate-200">
-        AwtarProp Platform &copy; {new Date().getFullYear()}
-      </footer>
-    </div>
+        <BottomNav />
+      </div>
+    </BrowserRouter>
   );
 }
 
