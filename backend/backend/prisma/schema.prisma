@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum ProviderType {
+  OWNER
+  BROKER
+  AGENT
+  AGENCY
+  DEVELOPER
+}
+
+enum PreferredLanguage {
+  EN
+  AM
+}
+
+enum ListingPurpose {
+  FOR_SALE
+  FOR_RENT
+  LOOKING_TO_BUY
+  LOOKING_TO_RENT
+}
+
+enum PropertyCategory {
+  RESIDENTIAL_HOUSE
+  CONDOMINIUM
+  APARTMENT
+  VILLA
+  STUDIO
+  COMMERCIAL_SPACE
+  OFFICE
+  SHOP
+  WAREHOUSE
+  BUILDING
+  HOTEL
+  RESIDENTIAL_LAND
+  COMMERCIAL_LAND
+  AGRICULTURAL_LAND
+}
+
+enum PropertyCondition {
+  NEW
+  EXCELLENT
+  GOOD
+  NEEDS_RENOVATION
+  UNDER_CONSTRUCTION
+}
+
+enum PublicationStatus {
+  DRAFT
+  PENDING_PAYMENT
+  PENDING_APPROVAL
+  PUBLISHED
+  REJECTED
+  EXPIRED
+  ARCHIVED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESSFUL
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id                String            @id @default(uuid())
+  telegramId        BigInt            @unique
+  firstName         String
+  lastName          String?
+  username          String?
+  phoneNumber       String?           @unique
+  isPhoneVerified   Boolean           @default(false)
+  role              UserRole          @default(USER)
+  providerType      ProviderType      @default(OWNER)
+  preferredLanguage PreferredLanguage @default(EN)
+
+  properties        PropertyListing[]
+  payments          PaymentTransaction[]
+
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([telegramId])
+  @@index([phoneNumber])
+}
+
+model PropertyListing {
+  id                String            @id @default(uuid())
+  titleEn           String
+  titleAm           String
+  descriptionEn     String            @db.Text
+  descriptionAm     String            @db.Text
+  category          PropertyCategory
+  purpose           ListingPurpose
+  priceETB          Decimal           @db.Decimal(14, 2)
+  areaSqMeters      Decimal?          @db.Decimal(10, 2)
+  bedrooms          Int?
+  bathrooms         Int?
+  floors            Int?
+  condition         PropertyCondition?
+  isFurnished       Boolean?          @default(false)
+  amenities         String[]          @default([])
+
+  region            String
+  subCity           String?
+  woreda            String?
+  kebele            String?
+  areaName          String
+  latitude          Float?
+  longitude         Float?
+
+  publicationStatus PublicationStatus @default(DRAFT)
+  listingFeeETB     Decimal           @db.Decimal(10, 2) @default(0.00)
+  isFeePaid         Boolean           @default(false)
+  viewsCount        Int               @default(0)
+
+  providerId        String
+  provider          User              @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  providerType      ProviderType
+
+  images            PropertyImage[]
+  payments          PaymentTransaction[]
+
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  publishedAt       DateTime?
+  expiresAt         DateTime?
+
+  @@index([providerId])
+  @@index([category, purpose])
+  @@index([region, subCity])
+  @@index([publicationStatus])
+}
+
+model PropertyImage {
+  id         String          @id @default(uuid())
+  url        String
+  publicId   String
+  isMain     Boolean         @default(false)
+  order      Int             @default(0)
+
+  propertyId String
+  property   PropertyListing @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime        @default(now())
+
+  @@index([propertyId])
+}
+
+model PaymentTransaction {
+  id            String        @id @default(uuid())
+  amountETB     Decimal       @db.Decimal(10, 2)
+  status        PaymentStatus @default(PENDING)
+  providerRef   String?       @unique
+  paymentMethod String?
+
+  userId        String
+  user          User            @relation(fields: [userId], references: [id])
+
+  propertyId    String
+  property      PropertyListing @relation(fields: [propertyId], references: [id])
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([propertyId])
+  @@index([status])
+}
