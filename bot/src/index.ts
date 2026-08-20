@@ -8,21 +8,29 @@ dotenv.config();
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const webAppUrl = process.env.TELEGRAM_WEBAPP_URL || "http://localhost:5173";
 
-if (!token || token === "your_telegram_bot_token_here") {
+if (!token || token.includes("your_telegram_bot_token")) {
   console.log(
-    "⚠️ TELEGRAM_BOT_TOKEN not provided or placeholder used. Bot startup skipped in dev mode.",
+    "⚠️ TELEGRAM_BOT_TOKEN unconfigured. Bot startup skipped in dev mode.",
   );
   process.exit(0);
 }
 
 const bot = new Telegraf(token);
 
+// Telegram /start command with optional deep linking payload
 bot.start((ctx) => {
   const firstName = ctx.from?.first_name || "Valued User";
+  const startPayload = ctx.payload; // Deep link payload e.g. /start prop_123
+
+  let targetUrl = webAppUrl;
+  if (startPayload) {
+    targetUrl = `${webAppUrl}?startapp=${startPayload}`;
+  }
+
   const welcomeMessage =
-    `👋 Welcome ${firstName} to *AwtarProp*! 🇪🇹\n\n` +
-    `Ethiopia's premier zero-commission property & land marketplace.\n\n` +
-    `Browse or list properties directly using our Telegram Mini App below.`;
+    `👋 *Welcome ${firstName} to AwtarProp!* 🇪🇹\n\n` +
+    `Ethiopia's direct property & land marketplace for Owners, Brokers, Agents, Agencies, and Developers.\n\n` +
+    `Tap the button below to browse or publish listings directly.`;
 
   return ctx.replyWithMarkdownV2(
     welcomeMessage
@@ -30,14 +38,14 @@ bot.start((ctx) => {
       .replace(/\./g, "\\.")
       .replace(/-/g, "\\-"),
     Markup.inlineKeyboard([
-      [Markup.button.webApp("🏠 Open AwtarProp App", webAppUrl)],
+      [Markup.button.webApp("🏠 Open AwtarProp App", targetUrl)],
     ]),
   );
 });
 
 bot.help((ctx) => {
   return ctx.reply(
-    "Use /start to open the AwtarProp property marketplace application.",
+    "Use /start to launch the AwtarProp application or browse property listings.",
   );
 });
 
