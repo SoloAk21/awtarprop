@@ -1,8 +1,10 @@
 {
   "name": "@awtarprop/shared",
   "version": "1.0.0",
+  "type": "module",
   "description": "Shared types, Zod schemas, constants, and utilities for AwtarProp",
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
