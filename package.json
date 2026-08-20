@@ -1,0 +1,30 @@
+{
+  "name": "awtarprop-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AwtarProp - Production-Ready Real Estate & Land Marketplace in Ethiopia",
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend",
+    "bot"
+  ],
+  "scripts": {
+    "build:shared": "npm --prefix shared run build",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:bot": "npm --prefix bot run dev",
+    "build:backend": "npm run build:shared && npm --prefix backend run build",
+    "build:frontend": "npm run build:shared && npm --prefix frontend run build",
+    "build:bot": "npm run build:shared && npm --prefix bot run build",
+    "lint": "npm --prefix shared run lint && npm --prefix backend run lint && npm --prefix frontend run lint && npm --prefix bot run lint"
+  },
+  "keywords": [
+    "real-estate",
+    "ethiopia",
+    "telegram-mini-app",
+    "awtarprop"
+  ],
+  "author": "AwtarProp Team",
+  "license": "ISC"
+}
