@@ -1,0 +1,34 @@
+services:
+  # Backend API Service
+  - type: web
+    name: awtarprop-backend
+    env: node
+    region: frankfurt
+    buildCommand: npm run build:backend
+    startCommand: npm --prefix backend run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+
+  # Telegram Bot Service
+  - type: worker
+    name: awtarprop-bot
+    env: node
+    region: frankfurt
+    buildCommand: npm run build:bot
+    startCommand: npm --prefix bot run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_WEBAPP_URL
+        sync: false
