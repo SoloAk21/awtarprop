@@ -1,13 +1,25 @@
-import { Request, Response, NextFunction } from "express";
-import { propertyService } from "./property.service.js";
+import { Request, Response, NextFunction } from 'express';
+import { propertyService } from './property.service.js';
+import { cloudinaryService } from '../../services/cloudinary.service.js';
+import { prisma } from '../../config/db.js';
+import {
+  BadRequestError,
+  NotFoundError,
+  ForbiddenError,
+} from '../../errors/AppError.js';
 
 export class PropertyController {
-  public create = async (req: Request, res: Response, next: NextFunction) => {
+  public create = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const userId = req.user!.userId;
       const property = await propertyService.createListing(userId, req.body);
+
       res.status(201).json({
-        status: "success",
+        status: 'success',
         data: { property },
       });
     } catch (error) {
@@ -15,7 +27,86 @@ export class PropertyController {
     }
   };
 
-  public getAll = async (req: Request, res: Response, next: NextFunction) => {
+  public uploadImages = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = req.user!.userId;
+      const idParam = req.params.id;
+      const propertyId = Array.isArray(idParam) ? idParam[0] : idParam;
+
+      if (!propertyId) {
+        throw new BadRequestError('Property ID is required');
+      }
+
+      const property = await prisma.propertyListing.findUnique({
+        where: { id: propertyId },
+        include: { images: true },
+      });
+
+      if (!property) {
+        throw new NotFoundError('Property listing not found');
+      }
+
+      if (property.providerId !== userId) {
+        throw new ForbiddenError('Unauthorized to modify this listing');
+      }
+
+      const files = req.files as Express.Multer.File[];
+
+      if (!files || files.length === 0) {
+        throw new BadRequestError('At least one image file is required');
+      }
+
+      const uploadedImages = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        let result = {
+          url: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80',
+          publicId: `mock_${Date.now()}_${i}`,
+        };
+
+        if (
+          process.env.CLOUDINARY_CLOUD_NAME &&
+          process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloudinary_cloud_name'
+        ) {
+          result = await cloudinaryService.uploadPropertyImage(
+            file.buffer,
+            propertyId
+          );
+        }
+
+        const imageRecord = await prisma.propertyImage.create({
+          data: {
+            propertyId,
+            url: result.url,
+            publicId: result.publicId,
+            isMain: property.images.length === 0 && i === 0,
+            order: property.images.length + i,
+          },
+        });
+
+        uploadedImages.push(imageRecord);
+      }
+
+      res.status(200).json({
+        status: 'success',
+        data: { images: uploadedImages },
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getAll = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const {
         category,
@@ -42,7 +133,7 @@ export class PropertyController {
       });
 
       res.status(200).json({
-        status: "success",
+        status: 'success',
         data: result,
       });
     } catch (error) {
@@ -50,20 +141,23 @@ export class PropertyController {
     }
   };
 
-  public getById = async (req: Request, res: Response, next: NextFunction) => {
+  public getById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const idParam = req.params.id;
       const id = Array.isArray(idParam) ? idParam[0] : idParam;
 
       if (!id) {
-        return res
-          .status(400)
-          .json({ status: "fail", message: "Property ID is required" });
+        throw new BadRequestError('Property ID is required');
       }
 
       const property = await propertyService.getListingById(id);
+
       res.status(200).json({
-        status: "success",
+        status: 'success',
         data: { property },
       });
     } catch (error) {
@@ -74,13 +168,14 @@ export class PropertyController {
   public getMyListings = async (
     req: Request,
     res: Response,
-    next: NextFunction,
+    next: NextFunction
   ) => {
     try {
       const userId = req.user!.userId;
       const properties = await propertyService.getMyListings(userId);
+
       res.status(200).json({
-        status: "success",
+        status: 'success',
         data: { properties },
       });
     } catch (error) {

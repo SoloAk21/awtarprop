@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { propertyController } from './property.controller.js';
 import { authenticateJwt } from '../../middleware/authMiddleware.js';
 import { validateRequest } from '../../middleware/validate.js';
+import { uploadPropertyImagesMiddleware } from '../../middleware/upload.js';
 import { propertyListingSchema } from '@awtarprop/shared';
 import { z } from 'zod';
 
@@ -11,9 +12,12 @@ const createPropertyValidationSchema = z.object({
   body: propertyListingSchema,
 });
 
-router.get('/', propertyController.getAll);
-router.get('/user/my-listings', authenticateJwt, propertyController.getMyListings);
-router.get('/:id', propertyController.getById);
+/* Protected routes before /:id */
+router.get(
+  '/user/my-listings',
+  authenticateJwt,
+  propertyController.getMyListings
+);
 
 router.post(
   '/',
@@ -21,5 +25,16 @@ router.post(
   validateRequest(createPropertyValidationSchema),
   propertyController.create
 );
+
+router.post(
+  '/:id/images',
+  authenticateJwt,
+  uploadPropertyImagesMiddleware.array('photos', 5),
+  propertyController.uploadImages
+);
+
+/* Public routes */
+router.get('/', propertyController.getAll);
+router.get('/:id', propertyController.getById);
 
 export default router;
