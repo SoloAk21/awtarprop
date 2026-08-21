@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   MapPin,
   Bed,
@@ -7,8 +7,8 @@ import {
   Shield,
   Eye,
   Image as ImageIcon,
-} from 'lucide-react';
-import { useTranslation } from '../hooks/useTranslation.js';
+} from "lucide-react";
+import { useTranslation } from "../hooks/useTranslation.js";
 
 export interface PropertyCardProps {
   id: string;
@@ -46,39 +46,38 @@ export function PropertyCard({
   images = [],
 }: PropertyCardProps) {
   const { currentLanguage } = useTranslation();
-  const title = currentLanguage === 'AM' ? titleAm : titleEn;
+  const title = currentLanguage === "AM" ? titleAm : titleEn;
 
-  const mainImage =
-    images.length > 0 ? images[0].url : null;
+  const mainImage = images.length > 0 ? images[0].url : null;
 
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('en-ET', {
-      style: 'currency',
-      currency: 'ETB',
+    new Intl.NumberFormat("en-ET", {
+      style: "currency",
+      currency: "ETB",
       maximumFractionDigits: 0,
     }).format(amount);
 
   const getPurposeBadge = (p: string) => {
     switch (p) {
-      case 'FOR_SALE':
+      case "FOR_SALE":
         return {
-          text: 'For Sale',
-          bg: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+          text: "For Sale",
+          bg: "bg-emerald-100 text-emerald-800 border-emerald-200",
         };
-      case 'FOR_RENT':
+      case "FOR_RENT":
         return {
-          text: 'For Rent',
-          bg: 'bg-blue-100 text-blue-800 border-blue-200',
+          text: "For Rent",
+          bg: "bg-blue-100 text-blue-800 border-blue-200",
         };
-      case 'LOOKING_TO_BUY':
+      case "LOOKING_TO_BUY":
         return {
-          text: 'Looking to Buy',
-          bg: 'bg-purple-100 text-purple-800 border-purple-200',
+          text: "Looking to Buy",
+          bg: "bg-purple-100 text-purple-800 border-purple-200",
         };
       default:
         return {
-          text: 'Looking to Rent',
-          bg: 'bg-amber-100 text-amber-800 border-amber-200',
+          text: "Looking to Rent",
+          bg: "bg-amber-100 text-amber-800 border-amber-200",
         };
     }
   };
@@ -97,9 +96,7 @@ export function PropertyCard({
         ) : (
           <div className="flex flex-col items-center gap-1 text-slate-400">
             <ImageIcon className="w-6 h-6" />
-            <span className="text-[10px] font-medium">
-              No Image Uploaded
-            </span>
+            <span className="text-[10px] font-medium">No Image Uploaded</span>
           </div>
         )}
 
@@ -131,7 +128,7 @@ export function PropertyCard({
         <div className="flex items-center gap-1 text-slate-500 text-xs font-medium">
           <MapPin className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
           <span className="line-clamp-1">
-            {areaName}, {subCity ? `${subCity}, ` : ''}
+            {areaName}, {subCity ? `${subCity}, ` : ""}
             {region}
           </span>
         </div>

@@ -1,13 +1,13 @@
-import { Building2, Globe } from 'lucide-react';
-import { useAuthStore } from '../store/useAuthStore.js';
-import { useTranslation } from '../hooks/useTranslation.js';
+import { Building2, Globe } from "lucide-react";
+import { useAuthStore } from "../store/useAuthStore.js";
+import { useTranslation } from "../hooks/useTranslation.js";
 
 export function Header() {
   const { t, currentLanguage } = useTranslation();
   const updateLanguage = useAuthStore((state) => state.updateLanguage);
 
   const toggleLanguage = () => {
-    updateLanguage(currentLanguage === 'EN' ? 'AM' : 'EN');
+    updateLanguage(currentLanguage === "EN" ? "AM" : "EN");
   };
 
   return (
@@ -18,10 +18,10 @@ export function Header() {
         </div>
         <div>
           <h1 className="text-base font-bold text-slate-900 tracking-tight leading-none">
-            {t('appTitle')}
+            {t("appTitle")}
           </h1>
           <p className="text-[10px] text-slate-500 font-medium leading-none mt-1">
-            {t('appSubtitle')}
+            {t("appSubtitle")}
           </p>
         </div>
       </div>
@@ -31,7 +31,7 @@ export function Header() {
         className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
       >
         <Globe className="w-3.5 h-3.5 text-slate-500" />
-        <span>{currentLanguage === 'EN' ? 'አማርኛ' : 'EN'}</span>
+        <span>{currentLanguage === "EN" ? "አማርኛ" : "EN"}</span>
       </button>
     </header>
   );

@@ -1,47 +1,58 @@
-import { Request, Response, NextFunction } from 'express';
-import { authService } from './auth.service.js';
+import { Request, Response, NextFunction } from "express";
+import { authService } from "./auth.service.js";
 
 export class AuthController {
   public authenticateTelegram = async (
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
-      const result =
-        await authService.authenticateTelegramUser(req.body);
-
-      res.status(200).json({
-        status: 'success',
-        data: result,
-      });
+      const result = await authService.authenticateTelegramUser(req.body);
+      res.status(200).json({ status: "success", data: result });
     } catch (error) {
       next(error);
     }
   };
 
-  public getMe = async (
+  public checkUserStatus = async (
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     try {
+      const { telegramId } = req.params;
+      const status = await authService.checkTelegramUserStatus(
+        telegramId as string,
+      );
+      res.status(200).json({ status: "success", data: status });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public updatePhone = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const result = await authService.updateUserPhone(req.body);
+      res.status(200).json({ status: "success", data: result });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getMe = async (req: Request, res: Response, next: NextFunction) => {
+    try {
       if (!req.user) {
-        return res.status(401).json({
-          status: 'fail',
-          message: 'Unauthorized',
-        });
+        return res
+          .status(401)
+          .json({ status: "fail", message: "Unauthorized" });
       }
-
-      const profile =
-        await authService.getUserProfile(req.user.userId);
-
-      res.status(200).json({
-        status: 'success',
-        data: {
-          user: profile,
-        },
-      });
+      const profile = await authService.getUserProfile(req.user.userId);
+      res.status(200).json({ status: "success", data: { user: profile } });
     } catch (error) {
       next(error);
     }

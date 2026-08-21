@@ -1,21 +1,25 @@
-import { Router } from 'express';
-import { authController } from './auth.controller.js';
-import { telegramAuthSchema } from './auth.schema.js';
-import { validateRequest } from '../../middleware/validate.js';
-import { authenticateJwt } from '../../middleware/authMiddleware.js';
+import { Router } from "express";
+import { authController } from "./auth.controller.js";
+import { telegramAuthSchema, updatePhoneSchema } from "./auth.schema.js";
+import { validateRequest } from "../../middleware/validate.js";
+import { authenticateJwt } from "../../middleware/authMiddleware.js";
 
 const router = Router();
 
 router.post(
-  '/telegram',
+  "/telegram",
   validateRequest(telegramAuthSchema),
-  authController.authenticateTelegram
+  authController.authenticateTelegram,
 );
 
-router.get(
-  '/me',
-  authenticateJwt,
-  authController.getMe
+router.get("/status/:telegramId", authController.checkUserStatus);
+
+router.post(
+  "/phone",
+  validateRequest(updatePhoneSchema),
+  authController.updatePhone,
 );
+
+router.get("/me", authenticateJwt, authController.getMe);
 
 export default router;

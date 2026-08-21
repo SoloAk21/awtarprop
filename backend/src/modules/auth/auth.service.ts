@@ -2,8 +2,8 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../../config/db.js";
 import { env } from "../../config/env.js";
 import { verifyTelegramInitData } from "../../utils/telegramAuth.js";
-import { UnauthorizedError } from "../../errors/AppError.js";
-import { TelegramAuthInput } from "./auth.schema.js";
+import { UnauthorizedError, NotFoundError } from "../../errors/AppError.js";
+import { TelegramAuthInput, UpdatePhoneInput } from "./auth.schema.js";
 import { ProviderType, PreferredLanguage } from "@awtarprop/shared";
 
 export interface AuthJwtPayload {
@@ -13,16 +13,11 @@ export interface AuthJwtPayload {
 }
 
 export class AuthService {
-  /**
-   * Authenticates Telegram initData, provisions or updates User record in DB, and returns JWT token.
-   */
   public async authenticateTelegramUser(input: TelegramAuthInput) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN || "";
 
-    // In local development mode without bot token, allow bypass if explicitly configured
     let validatedTelegram = verifyTelegramInitData(input.initData, botToken);
 
-    // Development fallback mock parsing when bot token is placeholder
     if (
       !validatedTelegram &&
       env.NODE_ENV === "development" &&
@@ -38,9 +33,7 @@ export class AuthService {
             hash: "dev_mock_hash",
           };
         }
-      } catch (e) {
-        // Fallback failed
-      }
+      } catch (e) {}
     }
 
     if (!validatedTelegram) {
@@ -49,7 +42,6 @@ export class AuthService {
 
     const { user: tgUser } = validatedTelegram;
 
-    // Upsert user in database
     const user = await prisma.user.upsert({
       where: { telegramId: BigInt(tgUser.id) },
       update: {
@@ -68,7 +60,6 @@ export class AuthService {
       },
     });
 
-    // Generate JWT access token
     const token = jwt.sign(
       {
         userId: user.id,
@@ -76,9 +67,7 @@ export class AuthService {
         role: user.role,
       },
       env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      },
+      { expiresIn: "7d" },
     );
 
     return {
@@ -100,8 +89,64 @@ export class AuthService {
   }
 
   /**
-   * Retrieves full profile details of current user.
+   * Checks if a user exists in database and if their phone number is verified.
    */
+  public async checkTelegramUserStatus(telegramId: string) {
+    const user = await prisma.user.findUnique({
+      where: { telegramId: BigInt(telegramId) },
+    });
+
+    if (!user) {
+      return { exists: false, isPhoneVerified: false };
+    }
+
+    return {
+      exists: true,
+      isPhoneVerified: user.isPhoneVerified && !!user.phoneNumber,
+      phoneNumber: user.phoneNumber,
+      firstName: user.firstName,
+    };
+  }
+
+  public async updateUserPhone(input: UpdatePhoneInput) {
+    const user = await prisma.user.findUnique({
+      where: { telegramId: BigInt(input.telegramId) },
+    });
+
+    if (!user) {
+      // Upsert user if contact received before auth
+      const created = await prisma.user.create({
+        data: {
+          telegramId: BigInt(input.telegramId),
+          firstName: "Telegram User",
+          phoneNumber: input.phoneNumber,
+          isPhoneVerified: true,
+        },
+      });
+      return {
+        id: created.id,
+        telegramId: created.telegramId.toString(),
+        phoneNumber: created.phoneNumber,
+        isPhoneVerified: created.isPhoneVerified,
+      };
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        phoneNumber: input.phoneNumber,
+        isPhoneVerified: true,
+      },
+    });
+
+    return {
+      id: updated.id,
+      telegramId: updated.telegramId.toString(),
+      phoneNumber: updated.phoneNumber,
+      isPhoneVerified: updated.isPhoneVerified,
+    };
+  }
+
   public async getUserProfile(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
