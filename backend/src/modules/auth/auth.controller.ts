@@ -22,9 +22,8 @@ export class AuthController {
   ) => {
     try {
       const { telegramId } = req.params;
-      const status = await authService.checkTelegramUserStatus(
-        telegramId as string,
-      );
+      const id = Array.isArray(telegramId) ? telegramId[0] : telegramId;
+      const status = await authService.checkTelegramUserStatus(id as string);
       res.status(200).json({ status: "success", data: status });
     } catch (error) {
       next(error);
@@ -38,6 +37,19 @@ export class AuthController {
   ) => {
     try {
       const result = await authService.updateUserPhone(req.body);
+      res.status(200).json({ status: "success", data: result });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public updateLanguage = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const result = await authService.updateUserLanguage(req.body);
       res.status(200).json({ status: "success", data: result });
     } catch (error) {
       next(error);

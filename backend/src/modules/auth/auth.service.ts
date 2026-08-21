@@ -3,7 +3,11 @@ import { prisma } from "../../config/db.js";
 import { env } from "../../config/env.js";
 import { verifyTelegramInitData } from "../../utils/telegramAuth.js";
 import { UnauthorizedError, NotFoundError } from "../../errors/AppError.js";
-import { TelegramAuthInput, UpdatePhoneInput } from "./auth.schema.js";
+import {
+  TelegramAuthInput,
+  UpdatePhoneInput,
+  UpdateLanguageInput,
+} from "./auth.schema.js";
 import { ProviderType, PreferredLanguage } from "@awtarprop/shared";
 
 export interface AuthJwtPayload {
@@ -88,62 +92,64 @@ export class AuthService {
     };
   }
 
-  /**
-   * Checks if a user exists in database and if their phone number is verified.
-   */
   public async checkTelegramUserStatus(telegramId: string) {
     const user = await prisma.user.findUnique({
       where: { telegramId: BigInt(telegramId) },
     });
 
     if (!user) {
-      return { exists: false, isPhoneVerified: false };
+      return { exists: false, isPhoneVerified: false, preferredLanguage: "EN" };
     }
 
     return {
       exists: true,
       isPhoneVerified: user.isPhoneVerified && !!user.phoneNumber,
       phoneNumber: user.phoneNumber,
+      preferredLanguage: user.preferredLanguage,
       firstName: user.firstName,
     };
   }
 
   public async updateUserPhone(input: UpdatePhoneInput) {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.upsert({
       where: { telegramId: BigInt(input.telegramId) },
-    });
-
-    if (!user) {
-      // Upsert user if contact received before auth
-      const created = await prisma.user.create({
-        data: {
-          telegramId: BigInt(input.telegramId),
-          firstName: "Telegram User",
-          phoneNumber: input.phoneNumber,
-          isPhoneVerified: true,
-        },
-      });
-      return {
-        id: created.id,
-        telegramId: created.telegramId.toString(),
-        phoneNumber: created.phoneNumber,
-        isPhoneVerified: created.isPhoneVerified,
-      };
-    }
-
-    const updated = await prisma.user.update({
-      where: { id: user.id },
-      data: {
+      update: {
+        phoneNumber: input.phoneNumber,
+        isPhoneVerified: true,
+      },
+      create: {
+        telegramId: BigInt(input.telegramId),
+        firstName: "Telegram User",
         phoneNumber: input.phoneNumber,
         isPhoneVerified: true,
       },
     });
 
     return {
-      id: updated.id,
-      telegramId: updated.telegramId.toString(),
-      phoneNumber: updated.phoneNumber,
-      isPhoneVerified: updated.isPhoneVerified,
+      id: user.id,
+      telegramId: user.telegramId.toString(),
+      phoneNumber: user.phoneNumber,
+      isPhoneVerified: user.isPhoneVerified,
+    };
+  }
+
+  public async updateUserLanguage(input: UpdateLanguageInput) {
+    const user = await prisma.user.upsert({
+      where: { telegramId: BigInt(input.telegramId) },
+      update: {
+        preferredLanguage: input.preferredLanguage as PreferredLanguage,
+      },
+      create: {
+        telegramId: BigInt(input.telegramId),
+        firstName: "Telegram User",
+        preferredLanguage: input.preferredLanguage as PreferredLanguage,
+      },
+    });
+
+    return {
+      id: user.id,
+      telegramId: user.telegramId.toString(),
+      preferredLanguage: user.preferredLanguage,
     };
   }
 
