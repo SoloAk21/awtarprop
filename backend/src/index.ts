@@ -10,6 +10,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { NotFoundError } from './errors/AppError.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import propertyRoutes from './modules/property/property.routes.js';
+import paymentRoutes from './modules/payment/payment.routes.js';
 import { ETHIOPIAN_REGIONS } from '@awtarprop/shared';
 
 const app: Express = express();
@@ -33,6 +34,7 @@ app.use('/api', limiter);
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/properties', propertyRoutes);
+app.use('/api/v1/payments', paymentRoutes);
 
 app.get('/api/v1/health', async (req: Request, res: Response, next) => {
   try {
