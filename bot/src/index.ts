@@ -16,13 +16,13 @@ const channelUsername = (process.env.TELEGRAM_CHANNEL_USERNAME ?? "").trim();
 
 if (!token || token.includes("your_telegram_bot_token")) {
   console.warn(
-    "TELEGRAM_BOT_TOKEN is missing or still a placeholder. Bot will not start.",
+    "⚠️ TELEGRAM_BOT_TOKEN is missing or still a placeholder. Bot will not start.",
   );
   process.exit(0);
 }
 
 // ---------------------------------------------------------------------------
-// Dynamic Custom Emoji Helper & Document IDs
+// Dynamic Custom Emoji Helper & Document IDs (Bot API 9.4+)
 // ---------------------------------------------------------------------------
 export const EMOJI_IDS = {
   UK_FLAG: "5202196682497859879",
@@ -246,6 +246,7 @@ bot.start(async (ctx) => {
   const payload = ctx.startPayload;
   const targetUrl = buildWebAppUrl(payload);
 
+  // Check Channel Membership
   const isSubscribed = await verifyChannelSubscription(ctx, userId);
 
   if (!isSubscribed) {
@@ -259,6 +260,7 @@ bot.start(async (ctx) => {
     );
   }
 
+  // Query Database Status
   const userStatus = await checkUserDbStatus(userId);
 
   if (userStatus.isPhoneVerified) {
@@ -407,12 +409,33 @@ bot.help((ctx) =>
 );
 
 // ---------------------------------------------------------------------------
-// Bot Launch
+// Bot Launch & Automatic Chat Menu Button Synchronization
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Bot Launch & Automatic Chat Menu Button Synchronization
 // ---------------------------------------------------------------------------
 const launchBotWithRetry = async (retryCount = 0) => {
   try {
     await bot.launch();
-    console.log("🤖 AwtarProp Bot running with increased 10s network timeouts");
+    console.log(
+      "🤖 AwtarProp Bot running with automatic Chat Menu Button synchronization",
+    );
+
+    // Automatically sync Telegram Chat Menu Button on startup
+    try {
+      await bot.telegram.setChatMenuButton({
+        menuButton: {
+          type: "web_app",
+          text: "Open AwtarProp",
+          web_app: { url: webAppUrl },
+        },
+      });
+      console.log(
+        `✅ Telegram Chat Menu Button synced to active URL: ${webAppUrl}`,
+      );
+    } catch (menuErr: any) {
+      console.warn("⚠️ Chat Menu Button sync warning:", menuErr.message);
+    }
   } catch (err: any) {
     console.error(
       `Network error launching Bot (Attempt ${retryCount + 1}):`,
@@ -425,7 +448,6 @@ const launchBotWithRetry = async (retryCount = 0) => {
     }
   }
 };
-
 launchBotWithRetry();
 
 const stop = (signal: string) => {
