@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
@@ -14,14 +13,16 @@ import {
 import {
   PlusCircle,
   CheckCircle2,
-  ArrowRight,
   Home,
   Key,
   Search,
   Tag,
   AlertTriangle,
+  ChevronDown,
+  X,
   Check,
 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 
 const COMMON_AMENITIES = [
   "Parking",
@@ -36,12 +37,169 @@ const COMMON_AMENITIES = [
   "Terrace",
 ];
 
+const CATEGORY_OPTIONS = [
+  { value: "APARTMENT", label: "Apartment" },
+  { value: "CONDOMINIUM", label: "Condominium" },
+  { value: "RESIDENTIAL_HOUSE", label: "Residential House / Villa" },
+  { value: "STUDIO", label: "Studio" },
+  { value: "COMMERCIAL_SPACE", label: "Commercial Space / Shop" },
+  { value: "OFFICE", label: "Office" },
+  { value: "BUILDING", label: "Full Building" },
+  { value: "RESIDENTIAL_LAND", label: "Residential Land" },
+  { value: "COMMERCIAL_LAND", label: "Commercial Land" },
+  { value: "AGRICULTURAL_LAND", label: "Agricultural Land" },
+];
+
+const PROVIDER_OPTIONS = [
+  { id: "OWNER", label: "Property Owner" },
+  { id: "BROKER", label: "Broker / Delala" },
+  { id: "AGENT", label: "Real Estate Agent" },
+  { id: "AGENCY", label: "Agency" },
+  { id: "DEVELOPER", label: "Developer" },
+];
+
+const PURPOSE_OPTIONS = [
+  { id: "FOR_SALE", label: "For Sale", icon: Home },
+  { id: "FOR_RENT", label: "For Rent", icon: Key },
+  { id: "LOOKING_TO_BUY", label: "Looking to Buy", icon: Search },
+  { id: "LOOKING_TO_RENT", label: "Looking to Rent", icon: Tag },
+];
+
+const FLAT_PUBLICATION_FEE = 150; // Flat fee for all listings
+
+/* Custom Searchable Select Dropdown Component */
+interface SearchSelectProps {
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  label: string;
+  error?: string;
+}
+
+function CustomSearchSelect({
+  options,
+  value,
+  onChange,
+  placeholder = "Select...",
+  label,
+  error,
+}: SearchSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredOptions = options.filter((o) =>
+    o.label.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const selectedOption = options.find((o) => o.value === value);
+
+  return (
+    <div className="relative space-y-1 w-full" ref={containerRef}>
+      <label className="block text-xs font-medium text-slate-700">
+        {label}
+      </label>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full h-9 px-3 bg-slate-50 border text-xs font-medium text-slate-800 rounded-lg flex items-center justify-between transition-all ${
+          error
+            ? "border-red-400 bg-red-50/20"
+            : isOpen
+              ? "border-emerald-500 ring-1 ring-emerald-500 bg-white"
+              : "border-slate-200 hover:border-slate-300"
+        }`}
+      >
+        <span className="truncate">
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${
+            isOpen ? "rotate-180 text-emerald-600" : ""
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden text-xs animate-in fade-in duration-100">
+          <div className="p-1.5 border-b border-slate-100 flex items-center gap-1.5 bg-slate-50">
+            <Search className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Type to filter..."
+              autoFocus
+              className="w-full bg-transparent text-xs font-normal text-slate-800 outline-none placeholder:text-slate-400"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="p-0.5 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+          <div className="max-h-40 overflow-y-auto py-1 divide-y divide-slate-50 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-slate-200">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((opt) => {
+                const isSelected = opt.value === value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      onChange(opt.value);
+                      setIsOpen(false);
+                      setSearch("");
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs font-medium flex items-center justify-between transition-colors ${
+                      isSelected
+                        ? "bg-emerald-50 text-emerald-800 font-semibold"
+                        : "text-slate-700 hover:bg-slate-50 hover:text-emerald-700"
+                    }`}
+                  >
+                    <span className="truncate">{opt.label}</span>
+                    {isSelected && (
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 ml-1" />
+                    )}
+                  </button>
+                );
+              })
+            ) : (
+              <div className="px-3 py-2 text-xs text-slate-400 text-center">
+                No matching results
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {error && <p className="text-[10px] text-red-600 font-medium">{error}</p>}
+    </div>
+  );
+}
+
 export function PostPropertyPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
 
-  const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -50,7 +208,6 @@ export function PostPropertyPage() {
     handleSubmit,
     watch,
     setValue,
-    trigger,
     formState: { errors },
   } = useForm<any>({
     resolver: zodResolver(propertyListingSchema),
@@ -80,29 +237,18 @@ export function PostPropertyPage() {
   const selectedPurpose = watch("purpose");
   const selectedCategory = watch("category");
   const selectedProviderType = watch("providerType");
+  const selectedRegion = watch("region");
+  const selectedSubCity = watch("subCity");
   const selectedAmenities = watch("amenities") || [];
   const selectedIsFurnished = watch("isFurnished");
 
   const isLandCategory = selectedCategory?.includes("LAND");
 
-  // Calculate dynamic publication fee in ETB
-  const calculateFee = () => {
-    let fee = 100;
-    if (selectedProviderType === "BROKER" || selectedProviderType === "AGENT")
-      fee = 150;
-    if (
-      selectedProviderType === "AGENCY" ||
-      selectedProviderType === "DEVELOPER"
-    )
-      fee = 300;
-    if (
-      isLandCategory ||
-      selectedCategory === "BUILDING" ||
-      selectedCategory === "HOTEL"
-    )
-      fee += 100;
-    return fee;
-  };
+  const regionOptions = ETHIOPIAN_REGIONS.map((r) => ({ value: r, label: r }));
+  const subCityOptions = ADDIS_ABABA_SUBCITIES.map((sc) => ({
+    value: sc,
+    label: sc,
+  }));
 
   const toggleAmenity = (amenity: string) => {
     if (selectedAmenities.includes(amenity)) {
@@ -112,30 +258,6 @@ export function PostPropertyPage() {
       );
     } else {
       setValue("amenities", [...selectedAmenities, amenity]);
-    }
-  };
-
-  // Validate step before proceeding
-  const handleNextStep = async (nextStep: number) => {
-    let fieldsToValidate: string[] = [];
-
-    if (step === 1) {
-      fieldsToValidate = ["purpose", "category", "providerType"];
-    } else if (step === 2) {
-      fieldsToValidate = [
-        "titleEn",
-        "titleAm",
-        "descriptionEn",
-        "descriptionAm",
-        "priceETB",
-      ];
-    }
-
-    const isValid = await trigger(fieldsToValidate as any);
-    if (isValid) {
-      setSubmitError(null);
-      setStep(nextStep);
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -172,478 +294,359 @@ export function PostPropertyPage() {
   });
 
   return (
-    <div className="space-y-4 pb-24 p-4 max-w-md mx-auto">
-      {/* Header & Step Indicator */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-bold">
-              <PlusCircle className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-sm font-extrabold text-slate-900">
-                {t("navPost")}
-              </h2>
-              <p className="text-[11px] text-slate-500 font-medium">
-                Step {step} of 3
-              </p>
-            </div>
+    <div className="w-full max-w-md mx-auto p-3.5 pb-24 space-y-4 text-slate-800 overflow-x-hidden">
+      {/* Header Banner */}
+      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
+            <PlusCircle className="w-4 h-4" />
           </div>
-          <span className="text-xs font-black px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg">
-            {calculateFee()} ETB Fee
-          </span>
+          <h2 className="text-xs font-semibold text-slate-800">
+            {t("navPost")}
+          </h2>
         </div>
-
-        {/* Step Progress Segment Bar */}
-        <div className="grid grid-cols-3 gap-1.5 pt-1">
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                s <= step ? "bg-emerald-600" : "bg-slate-100"
-              }`}
-            />
-          ))}
-        </div>
+        <span className="text-[11px] font-medium px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100/60">
+          {FLAT_PUBLICATION_FEE} ETB Fee
+        </span>
       </div>
 
       {submitError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-xl text-xs flex items-center gap-2 font-medium animate-in fade-in duration-200">
-          <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+        <div className="bg-red-50 border border-red-200 text-red-700 p-2.5 rounded-lg text-xs flex items-center gap-2 font-normal">
+          <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
           <span>{submitError}</span>
         </div>
       )}
 
-      <form onSubmit={onFormSubmit} className="space-y-4">
-        {/* STEP 1: Purpose, Category & Provider */}
-        {step === 1 && (
-          <div className="space-y-4 animate-in fade-in duration-200">
-            {/* Purpose Grid */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-2.5">
-              <label className="block text-xs font-extrabold text-slate-900">
-                1. Listing Purpose *
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { id: "FOR_SALE", label: "For Sale", icon: Home },
-                  { id: "FOR_RENT", label: "For Rent", icon: Key },
-                  {
-                    id: "LOOKING_TO_BUY",
-                    label: "Looking to Buy",
-                    icon: Search,
-                  },
-                  {
-                    id: "LOOKING_TO_RENT",
-                    label: "Looking to Rent",
-                    icon: Tag,
-                  },
-                ].map((item) => {
-                  const Icon = item.icon;
-                  const isSelected = selectedPurpose === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setValue("purpose", item.id as any)}
-                      className={`p-3 rounded-xl border text-left transition-all flex flex-col gap-1.5 ${
-                        isSelected
-                          ? "border-emerald-600 bg-emerald-50/60 text-emerald-900 ring-1 ring-emerald-600"
-                          : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                      }`}
-                    >
-                      <Icon
-                        className={`w-4 h-4 ${isSelected ? "text-emerald-600" : "text-slate-400"}`}
-                      />
-                      <span className="text-xs font-bold">{item.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Category Select */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
-              <label className="block text-xs font-extrabold text-slate-900">
-                2. Property Category *
-              </label>
-              <select
-                {...register("category")}
-                className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-emerald-500"
-              >
-                <option value="APARTMENT">Apartment</option>
-                <option value="CONDOMINIUM">Condominium</option>
-                <option value="RESIDENTIAL_HOUSE">
-                  Residential House / Villa
-                </option>
-                <option value="STUDIO">Studio</option>
-                <option value="COMMERCIAL_SPACE">
-                  Commercial Space / Shop
-                </option>
-                <option value="OFFICE">Office</option>
-                <option value="BUILDING">Full Building</option>
-                <option value="RESIDENTIAL_LAND">Residential Land</option>
-                <option value="COMMERCIAL_LAND">Commercial Land</option>
-                <option value="AGRICULTURAL_LAND">Agricultural Land</option>
-              </select>
-            </div>
-
-            {/* Provider Type */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-2.5">
-              <label className="block text-xs font-extrabold text-slate-900">
-                3. Your Listing Provider Type *
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { id: "OWNER", label: "Property Owner", fee: "100 ETB" },
-                  { id: "BROKER", label: "Broker / Delala", fee: "150 ETB" },
-                  { id: "AGENT", label: "Real Estate Agent", fee: "150 ETB" },
-                  { id: "AGENCY", label: "Agency", fee: "300 ETB" },
-                  { id: "DEVELOPER", label: "Developer", fee: "300 ETB" },
-                ].map((item) => {
-                  const isSelected = selectedProviderType === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setValue("providerType", item.id as any)}
-                      className={`p-2.5 rounded-xl border text-left transition-all ${
-                        isSelected
-                          ? "border-emerald-600 bg-emerald-50/60 text-emerald-900 ring-1 ring-emerald-600"
-                          : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold">{item.label}</span>
-                        {isSelected && (
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        )}
-                      </div>
-                      <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">
-                        Base Fee: {item.fee}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => handleNextStep(2)}
-              className="w-full py-3.5 bg-emerald-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm hover:bg-emerald-700 transition-colors"
-            >
-              <span>Continue to Property Details</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-
-        {/* STEP 2: Titles, Price & Specs */}
-        {step === 2 && (
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3.5 animate-in fade-in duration-200">
-            <div>
-              <label className="block text-xs font-extrabold text-slate-900 mb-1">
-                Property Title (English) *
-              </label>
-              <input
-                type="text"
-                {...register("titleEn")}
-                placeholder="E.g., Modern 3 Bedroom Apartment in Bole Atlas"
-                className={`w-full text-xs p-3 bg-slate-50 border rounded-xl font-medium focus:outline-none ${
-                  errors.titleEn
-                    ? "border-red-400 bg-red-50/30"
-                    : "border-slate-200 focus:border-emerald-500"
-                }`}
-              />
-              {errors.titleEn && (
-                <p className="text-[10px] font-bold text-red-600 mt-1">
-                  {String(errors.titleEn.message)}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-xs font-extrabold text-slate-900 mb-1">
-                Property Title (Amharic) *
-              </label>
-              <input
-                type="text"
-                {...register("titleAm")}
-                placeholder="ምሳሌ፦ በቦሌ አትላስ ዘመናዊ የ 3 መኝታ አፓርትመንት"
-                className={`w-full text-xs p-3 bg-slate-50 border rounded-xl font-medium focus:outline-none ${
-                  errors.titleAm
-                    ? "border-red-400 bg-red-50/30"
-                    : "border-slate-200 focus:border-emerald-500"
-                }`}
-              />
-              {errors.titleAm && (
-                <p className="text-[10px] font-bold text-red-600 mt-1">
-                  {String(errors.titleAm.message)}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-xs font-extrabold text-slate-900 mb-1">
-                Price (ETB) *
-              </label>
-              <input
-                type="number"
-                {...register("priceETB", { valueAsNumber: true })}
-                className={`w-full text-xs p-3 bg-slate-50 border rounded-xl font-black text-emerald-600 text-sm focus:outline-none ${
-                  errors.priceETB
-                    ? "border-red-400"
-                    : "border-slate-200 focus:border-emerald-500"
-                }`}
-              />
-              {errors.priceETB && (
-                <p className="text-[10px] font-bold text-red-600 mt-1">
-                  {String(errors.priceETB.message)}
-                </p>
-              )}
-            </div>
-
-            {!isLandCategory && (
-              <>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <label className="block text-[10px] font-extrabold text-slate-700 mb-1">
-                      Bedrooms
-                    </label>
-                    <input
-                      type="number"
-                      {...register("bedrooms", { valueAsNumber: true })}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-center"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-extrabold text-slate-700 mb-1">
-                      Bathrooms
-                    </label>
-                    <input
-                      type="number"
-                      {...register("bathrooms", { valueAsNumber: true })}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-center"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-extrabold text-slate-700 mb-1">
-                      Area (m²)
-                    </label>
-                    <input
-                      type="number"
-                      {...register("areaSqMeters", { valueAsNumber: true })}
-                      className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-center"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
-                  <span className="text-xs font-extrabold text-slate-800">
-                    Is Furnished?
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setValue("isFurnished", !selectedIsFurnished)
-                    }
-                    className={`w-11 h-6 rounded-full transition-colors relative ${
-                      selectedIsFurnished ? "bg-emerald-600" : "bg-slate-300"
+      <form onSubmit={onFormSubmit} className="space-y-3.5">
+        {/* Purpose Chips - Single Row Horizontal Scroll */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-slate-700">
+            Listing Purpose *
+          </label>
+          <div className="flex gap-1.5 overflow-x-auto pb-1 whitespace-nowrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {PURPOSE_OPTIONS.map((item) => {
+              const Icon = item.icon;
+              const isSelected = selectedPurpose === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setValue("purpose", item.id as any)}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-1.5 shrink-0 ${
+                    isSelected
+                      ? "border-emerald-600 bg-emerald-600 text-white shadow-xs"
+                      : "border-slate-200 bg-slate-50/80 text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  <Icon
+                    className={`w-3.5 h-3.5 ${
+                      isSelected ? "text-white" : "text-slate-400"
                     }`}
-                  >
-                    <span
-                      className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${
-                        selectedIsFurnished ? "right-1" : "left-1"
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-extrabold text-slate-900">
-                    Amenities
-                  </label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {COMMON_AMENITIES.map((amenity) => {
-                      const isSelected = selectedAmenities.includes(amenity);
-                      return (
-                        <button
-                          key={amenity}
-                          type="button"
-                          onClick={() => toggleAmenity(amenity)}
-                          className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all ${
-                            isSelected
-                              ? "bg-emerald-600 text-white border-emerald-600"
-                              : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                          }`}
-                        >
-                          {amenity}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
-            )}
-
-            <div>
-              <label className="block text-xs font-extrabold text-slate-900 mb-1">
-                Description (English) *
-              </label>
-              <textarea
-                rows={3}
-                {...register("descriptionEn")}
-                placeholder="Provide location landmark, condition, water/electricity details..."
-                className={`w-full text-xs p-3 bg-slate-50 border rounded-xl font-medium focus:outline-none ${
-                  errors.descriptionEn
-                    ? "border-red-400 bg-red-50/30"
-                    : "border-slate-200 focus:border-emerald-500"
-                }`}
-              />
-              {errors.descriptionEn && (
-                <p className="text-[10px] font-bold text-red-600 mt-1">
-                  {String(errors.descriptionEn.message)}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-xs font-extrabold text-slate-900 mb-1">
-                Description (Amharic) *
-              </label>
-              <textarea
-                rows={3}
-                {...register("descriptionAm")}
-                placeholder="ስለ ንብረቱ ዝርዝር መረጃ ያስገቡ..."
-                className={`w-full text-xs p-3 bg-slate-50 border rounded-xl font-medium focus:outline-none ${
-                  errors.descriptionAm
-                    ? "border-red-400 bg-red-50/30"
-                    : "border-slate-200 focus:border-emerald-500"
-                }`}
-              />
-              {errors.descriptionAm && (
-                <p className="text-[10px] font-bold text-red-600 mt-1">
-                  {String(errors.descriptionAm.message)}
-                </p>
-              )}
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="w-1/3 py-3.5 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs"
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={() => handleNextStep(3)}
-                className="w-2/3 py-3.5 bg-emerald-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm hover:bg-emerald-700"
-              >
-                <span>Continue to Location</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
+                  />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </div>
-        )}
+        </div>
 
-        {/* STEP 3: Location & Publication Disclosure */}
-        {step === 3 && (
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-4 animate-in fade-in duration-200">
-            <div>
-              <label className="block text-xs font-extrabold text-slate-900 mb-1.5">
-                Region *
-              </label>
-              <select
-                {...register("region")}
-                className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800"
-              >
-                {ETHIOPIAN_REGIONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-            </div>
+        {/* Property Category - Custom Searchable Select */}
+        <CustomSearchSelect
+          label="Property Category *"
+          options={CATEGORY_OPTIONS}
+          value={selectedCategory}
+          onChange={(val) => setValue("category", val)}
+          placeholder="Select Category..."
+          error={errors.category?.message as string}
+        />
 
-            <div>
-              <label className="block text-xs font-extrabold text-slate-900 mb-1.5">
-                Sub-city (Addis Ababa)
-              </label>
-              <select
-                {...register("subCity")}
-                className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800"
-              >
-                {ADDIS_ABABA_SUBCITIES.map((sc) => (
-                  <option key={sc} value={sc}>
-                    {sc}
-                  </option>
-                ))}
-              </select>
-            </div>
+        {/* Provider Type Chips - Single Row Horizontal Scroll */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-slate-700">
+            Your Listing Provider Type *
+          </label>
+          <div className="flex gap-1.5 overflow-x-auto pb-1 whitespace-nowrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {PROVIDER_OPTIONS.map((item) => {
+              const isSelected = selectedProviderType === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setValue("providerType", item.id as any)}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all shrink-0 ${
+                    isSelected
+                      ? "border-emerald-600 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600 font-semibold"
+                      : "border-slate-200 bg-slate-50/80 text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-            <div>
-              <label className="block text-xs font-extrabold text-slate-900 mb-1">
-                Area Name / Landmark *
-              </label>
-              <input
-                type="text"
-                {...register("areaName")}
-                placeholder="E.g., Bole Atlas, CMC, Sarbet"
-                className={`w-full text-xs p-3 bg-slate-50 border rounded-xl font-medium focus:outline-none ${
-                  errors.areaName
-                    ? "border-red-400 bg-red-50/30"
-                    : "border-slate-200 focus:border-emerald-500"
-                }`}
-              />
-              {errors.areaName && (
-                <p className="text-[10px] font-bold text-red-600 mt-1">
-                  {String(errors.areaName.message)}
-                </p>
-              )}
-            </div>
-
-            {/* Fee Summary Card */}
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 p-4 rounded-xl space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-emerald-950">
-                  Calculated Publication Fee
-                </span>
-                <span className="text-base font-black text-emerald-600">
-                  {calculateFee()} ETB
-                </span>
-              </div>
-              <p className="text-[10px] text-emerald-800 leading-relaxed font-medium">
-                Submitting this listing creates a draft in your portfolio. You
-                can upload photos and complete the {calculateFee()} ETB checkout
-                to publish it live to the marketplace.
+        {/* Titles & Pricing Card */}
+        <div className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1">
+              Property Title (English) *
+            </label>
+            <input
+              type="text"
+              {...register("titleEn")}
+              placeholder="E.g., Modern 3 Bedroom Apartment in Bole Atlas"
+              className={`w-full h-9 px-3 text-xs bg-white border rounded-lg font-normal focus:outline-none ${
+                errors.titleEn
+                  ? "border-red-400 bg-red-50/20"
+                  : "border-slate-200 focus:border-emerald-500"
+              }`}
+            />
+            {errors.titleEn && (
+              <p className="text-[10px] text-red-600 font-medium mt-0.5">
+                {String(errors.titleEn.message)}
               </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1">
+              Property Title (Amharic) *
+            </label>
+            <input
+              type="text"
+              {...register("titleAm")}
+              placeholder="ምሳሌ፦ በቦሌ አትላስ ዘመናዊ የ 3 መኝታ አፓርትመንት"
+              className={`w-full h-9 px-3 text-xs bg-white border rounded-lg font-normal focus:outline-none ${
+                errors.titleAm
+                  ? "border-red-400 bg-red-50/20"
+                  : "border-slate-200 focus:border-emerald-500"
+              }`}
+            />
+            {errors.titleAm && (
+              <p className="text-[10px] text-red-600 font-medium mt-0.5">
+                {String(errors.titleAm.message)}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1">
+              Price (ETB) *
+            </label>
+            <input
+              type="number"
+              {...register("priceETB", { valueAsNumber: true })}
+              className={`w-full h-9 px-3 text-xs bg-white border rounded-lg font-semibold text-emerald-700 focus:outline-none ${
+                errors.priceETB
+                  ? "border-red-400"
+                  : "border-slate-200 focus:border-emerald-500"
+              }`}
+            />
+            {errors.priceETB && (
+              <p className="text-[10px] text-red-600 font-medium mt-0.5">
+                {String(errors.priceETB.message)}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Dynamic Property Attributes */}
+        {!isLandCategory && (
+          <div className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl space-y-3">
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                  Bedrooms
+                </label>
+                <input
+                  type="number"
+                  {...register("bedrooms", { valueAsNumber: true })}
+                  className="w-full h-8 px-2 text-xs bg-white border border-slate-200 rounded-lg font-semibold text-center focus:border-emerald-500 outline-none"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                  Bathrooms
+                </label>
+                <input
+                  type="number"
+                  {...register("bathrooms", { valueAsNumber: true })}
+                  className="w-full h-8 px-2 text-xs bg-white border border-slate-200 rounded-lg font-semibold text-center focus:border-emerald-500 outline-none"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                  Area (m²)
+                </label>
+                <input
+                  type="number"
+                  {...register("areaSqMeters", { valueAsNumber: true })}
+                  className="w-full h-8 px-2 text-xs bg-white border border-slate-200 rounded-lg font-semibold text-center focus:border-emerald-500 outline-none"
+                />
+              </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            {/* Furnished Toggle Switch */}
+            <div className="flex items-center justify-between px-3 py-2 bg-white rounded-lg border border-slate-200">
+              <span className="text-xs font-medium text-slate-700">
+                Is Furnished?
+              </span>
               <button
                 type="button"
-                onClick={() => setStep(2)}
-                className="w-1/3 py-3.5 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs"
+                onClick={() => setValue("isFurnished", !selectedIsFurnished)}
+                className={`w-9 h-5 rounded-full transition-colors relative ${
+                  selectedIsFurnished ? "bg-emerald-600" : "bg-slate-300"
+                }`}
               >
-                Back
+                <span
+                  className={`w-3.5 h-3.5 rounded-full bg-white absolute top-0.75 transition-transform ${
+                    selectedIsFurnished ? "right-0.75" : "left-0.75"
+                  }`}
+                />
               </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-2/3 py-3.5 bg-emerald-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-emerald-700 disabled:opacity-50 shadow-sm"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>
-                  {isSubmitting
-                    ? "Creating Draft..."
-                    : "Create Draft & Continue"}
-                </span>
-              </button>
+            </div>
+
+            {/* Amenities - Wrapped Multi-Row Grid */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-slate-700">
+                Amenities
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {COMMON_AMENITIES.map((amenity) => {
+                  const isSelected = selectedAmenities.includes(amenity);
+                  return (
+                    <button
+                      key={amenity}
+                      type="button"
+                      onClick={() => toggleAmenity(amenity)}
+                      className={`text-xs font-medium px-2.5 py-1 rounded-lg border transition-all ${
+                        isSelected
+                          ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                      }`}
+                    >
+                      {amenity}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
+
+        {/* Descriptions */}
+        <div className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1">
+              Description (English) *
+            </label>
+            <textarea
+              rows={2}
+              {...register("descriptionEn")}
+              placeholder="Landmark, condition, utilities details..."
+              className={`w-full px-3 py-2 text-xs bg-white border rounded-lg font-normal focus:outline-none ${
+                errors.descriptionEn
+                  ? "border-red-400 bg-red-50/20"
+                  : "border-slate-200 focus:border-emerald-500"
+              }`}
+            />
+            {errors.descriptionEn && (
+              <p className="text-[10px] text-red-600 font-medium mt-0.5">
+                {String(errors.descriptionEn.message)}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1">
+              Description (Amharic) *
+            </label>
+            <textarea
+              rows={2}
+              {...register("descriptionAm")}
+              placeholder="ስለ ንብረቱ ዝርዝር መረጃ ያስገቡ..."
+              className={`w-full px-3 py-2 text-xs bg-white border rounded-lg font-normal focus:outline-none ${
+                errors.descriptionAm
+                  ? "border-red-400 bg-red-50/20"
+                  : "border-slate-200 focus:border-emerald-500"
+              }`}
+            />
+            {errors.descriptionAm && (
+              <p className="text-[10px] text-red-600 font-medium mt-0.5">
+                {String(errors.descriptionAm.message)}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Location Section */}
+        <div className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl space-y-3">
+          <CustomSearchSelect
+            label="Region *"
+            options={regionOptions}
+            value={selectedRegion}
+            onChange={(val) => setValue("region", val)}
+            placeholder="Select Region..."
+          />
+
+          <CustomSearchSelect
+            label="Sub-city (Addis Ababa)"
+            options={subCityOptions}
+            value={selectedSubCity}
+            onChange={(val) => setValue("subCity", val)}
+            placeholder="Select Sub-city..."
+          />
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1">
+              Area Name / Landmark *
+            </label>
+            <input
+              type="text"
+              {...register("areaName")}
+              placeholder="E.g., Bole Atlas, CMC, Sarbet"
+              className={`w-full h-9 px-3 text-xs bg-white border rounded-lg font-normal focus:outline-none ${
+                errors.areaName
+                  ? "border-red-400 bg-red-50/20"
+                  : "border-slate-200 focus:border-emerald-500"
+              }`}
+            />
+            {errors.areaName && (
+              <p className="text-[10px] text-red-600 font-medium mt-0.5">
+                {String(errors.areaName.message)}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Summary Box */}
+        <div className="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200/70 space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-emerald-950">
+              Publication Fee
+            </span>
+            <span className="text-xs font-bold text-emerald-700">
+              {FLAT_PUBLICATION_FEE} ETB
+            </span>
+          </div>
+          <p className="text-[10px] text-emerald-800 leading-normal font-normal">
+            Submitting creates a draft in your portfolio. You can upload photos
+            and complete checkout to publish live.
+          </p>
+        </div>
+
+        {/* Action Button */}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-medium rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50 transition-colors shadow-xs"
+        >
+          <CheckCircle2 className="w-4 h-4" />
+          <span>
+            {isSubmitting ? "Creating Draft..." : "Create Draft & Continue"}
+          </span>
+        </button>
       </form>
     </div>
   );

@@ -6,6 +6,9 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    allowedHosts: true, // Allows any ngrok tunnel domain during development
+    host: "0.0.0.0", // Binds Vite to both IPv4 (127.0.0.1) and IPv6 (::1)
+    port: 5173,
+    strictPort: true, // Prevents Vite from silently switching ports
+    allowedHosts: true, // Allows ngrok tunnel domains
   },
 });
