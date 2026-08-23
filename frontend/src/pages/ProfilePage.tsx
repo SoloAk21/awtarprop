@@ -1,69 +1,89 @@
+import React from "react";
 import { useTranslation } from "../hooks/useTranslation.js";
 import { useAuthStore } from "../store/useAuthStore.js";
 import { MyListingsSection } from "../components/MyListingsSection.js";
-import { Shield, Globe, LogOut } from "lucide-react";
+import { ShieldCheck, Globe, LogOut, Phone, CheckCircle2 } from "lucide-react";
 
 export function ProfilePage() {
   const { t, currentLanguage } = useTranslation();
   const { user, updateLanguage, logout } = useAuthStore();
 
   return (
-    <div className="space-y-4 pb-20 p-4">
-      {/* User Info Header */}
-      <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-        <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold text-lg">
+    <div className="w-full max-w-md mx-auto p-3.5 pb-24 space-y-4 text-slate-800">
+      {/* User Identity Card */}
+      <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100 flex items-center gap-3.5">
+        <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl flex items-center justify-center font-semibold text-base shadow-xs shrink-0">
           {user?.firstName?.charAt(0) || "U"}
         </div>
-        <div>
-          <h3 className="font-bold text-slate-900 text-base">
-            {user
-              ? `${user.firstName} ${user.lastName || ""}`
-              : "AwtarProp User"}
-          </h3>
-          <p className="text-xs text-slate-500 font-medium">
+        <div className="space-y-0.5 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-semibold text-slate-800 text-sm truncate">
+              {user
+                ? `${user.firstName} ${user.lastName || ""}`
+                : "AwtarProp User"}
+            </h3>
+            {user?.isPhoneVerified && (
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            )}
+          </div>
+          <p className="text-[11px] text-slate-400 font-normal truncate">
             @{user?.username || "telegram_user"}
           </p>
         </div>
       </div>
 
-      {/* Settings Grid */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 divide-y divide-slate-100 text-xs">
-        <div className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 text-slate-700 font-medium">
-            <Shield className="w-4 h-4 text-emerald-600" />
+      {/* Preference Settings Group */}
+      <div className="p-3 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-3 text-xs">
+        <div className="flex items-center justify-between py-1">
+          <div className="flex items-center gap-2 font-medium text-slate-700">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
             <span>{t("providerType")}</span>
           </div>
-          <span className="font-semibold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg">
+          <span className="font-semibold text-slate-800 bg-white px-2.5 py-1 rounded-xl border border-slate-200/70">
             {user?.providerType || "OWNER"}
           </span>
         </div>
 
-        <div className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 text-slate-700 font-medium">
+        <div className="border-t border-slate-200/60 pt-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-2 font-medium text-slate-700">
             <Globe className="w-4 h-4 text-emerald-600" />
             <span>{t("languageSwitch")}</span>
           </div>
           <button
+            type="button"
             onClick={() =>
               updateLanguage(currentLanguage === "EN" ? "AM" : "EN")
             }
-            className="font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg"
+            className="font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-xl hover:bg-emerald-100 transition-colors"
           >
             {currentLanguage === "EN" ? "English" : "አማርኛ"}
           </button>
         </div>
+
+        {user?.phoneNumber && (
+          <div className="border-t border-slate-200/60 pt-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-2 font-medium text-slate-700">
+              <Phone className="w-4 h-4 text-emerald-600" />
+              <span>Contact Phone</span>
+            </div>
+            <span className="font-medium text-slate-800 bg-white px-2.5 py-1 rounded-xl border border-slate-200/70">
+              {user.phoneNumber}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* My Listings Section */}
+      {/* Portfolio Section */}
       <MyListingsSection />
 
-      {/* Logout */}
+      {/* Log Out CTA */}
       <button
+        type="button"
         onClick={logout}
-        className="w-full py-3 bg-red-50 text-red-600 font-semibold rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+        className="w-full h-10 bg-red-50 text-red-600 font-medium rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-red-100/80 active:bg-red-100 transition-colors border border-red-100"
       >
-        <LogOut className="w-4 h-4" />
-        <span>Log Out</span>
+        <LogOut className="w-3.5 h-3.5" />
+        <span>Log Out Session</span>
       </button>
     </div>
   );
