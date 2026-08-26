@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { propertyService } from "./property.service.js";
+import { aiService } from "../../services/ai.service.js";
 import { cloudinaryService } from "../../services/cloudinary.service.js";
 import { prisma } from "../../config/db.js";
 import {
@@ -16,6 +17,26 @@ export class PropertyController {
       res.status(201).json({
         status: "success",
         data: { property },
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public generateAiAd = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const { prompt, preferredLanguage } = req.body;
+      const result = await aiService.generatePropertyAd(
+        prompt,
+        preferredLanguage || "EN",
+      );
+      res.status(200).json({
+        status: "success",
+        data: result,
       });
     } catch (error) {
       next(error);
@@ -127,21 +148,6 @@ export class PropertyController {
         limit: limit ? Number(limit) : 20,
         offset: offset ? Number(offset) : 0,
       });
-
-      console.log(
-        "[PropertyController.getAll] Total properties found:",
-        result.total,
-      );
-      if (result.properties.length > 0) {
-        console.log(
-          "[PropertyController.getAll] Property 0 ID:",
-          result.properties[0].id,
-          "Images count:",
-          result.properties[0].images?.length,
-          "Sample Image URL:",
-          result.properties[0].images?.[0]?.url,
-        );
-      }
 
       res.status(200).json({
         status: "success",
