@@ -17,6 +17,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().optional(),
   JWT_SECRET: z.string().default("awtarprop_dev_secret_key_change_in_prod"),
   JWT_EXPIRES_IN: z.string().default("7d"),
+  GEMINI_API_KEY: z.string().optional(),
 });
 
 const _env = envSchema.safeParse(process.env);
