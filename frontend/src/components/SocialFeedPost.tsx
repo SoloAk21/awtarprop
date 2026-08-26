@@ -13,9 +13,10 @@ import {
   Send,
   Eye,
   CheckCircle2,
+  MoreHorizontal,
   Sparkles,
   Award,
-  Hash,
+  Tag,
 } from "lucide-react";
 
 export interface SocialFeedPostProps {
@@ -66,15 +67,15 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
   const images = property.images || [];
   const amenities: string[] = property.amenities || [];
 
-  // Convert amenities array to hashtag strings (#Parking #BackupGenerator)
+  // Convert amenities array to horizontal hashtags (#Parking #WaterTank #SecurityCCTV)
   const amenityHashtags = useMemo(() => {
     return amenities.map((a) => `#${a.replace(/[^a-zA-Z0-9]/g, "")}`).join(" ");
   }, [amenities]);
 
-  const shouldTruncate = description && description.length > 100;
+  const shouldTruncate = description && description.length > 110;
   const displayText =
     shouldTruncate && !isExpanded
-      ? `${description.slice(0, 100)}...`
+      ? `${description.slice(0, 110)}...`
       : description;
 
   const handleShare = useCallback(
@@ -122,6 +123,14 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
             </p>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={handleShare}
+          className="p-1.5 text-slate-400 hover:text-slate-700"
+        >
+          <MoreHorizontal className="w-4 h-4" />
+        </button>
       </div>
 
       {/* 2. UNCLUTTERED MULTI-PHOTO COLLAGE */}
@@ -130,9 +139,9 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
         onImageClick={(index) => onOpenImageIndex(property, index)}
       />
 
-      {/* 3. COMPACT ACTION BAR (COMPACT LEFT / SAVE RIGHT) */}
+      {/* 3. COMPACT ACTION BAR (LEFT: CHAT, CALL, SHARE | RIGHT: VIEWS, BOOKMARK) */}
       <div className="px-4 py-2 flex items-center justify-between border-b border-slate-100/80">
-        {/* Left Compact Action Icons */}
+        {/* Left Compact Icons */}
         <div className="flex items-center gap-1">
           {telegramUsername && (
             <a
@@ -141,7 +150,7 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               className="p-2 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors"
-              title="Chat on Telegram"
+              title="Chat"
             >
               <Send className="w-4 h-4" />
             </a>
@@ -152,7 +161,7 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
               href={`tel:${contactPhone}`}
               onClick={(e) => e.stopPropagation()}
               className="p-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
-              title="Call Provider"
+              title="Call"
             >
               <Phone className="w-4 h-4" />
             </a>
@@ -162,17 +171,17 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
             type="button"
             onClick={handleShare}
             className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
-            title="Share Listing"
+            title="Share"
           >
             <Share2 className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Right Views & Bookmark Icon Only */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500">
+        {/* Right Compact Icons */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 px-2 py-1 bg-slate-50 rounded-lg">
             <Eye className="w-3.5 h-3.5 text-emerald-600" />
-            <span>{property.viewsCount || 0} views</span>
+            <span>{property.viewsCount || 0}</span>
           </div>
 
           <button
@@ -183,7 +192,7 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
                 ? "bg-emerald-50 text-emerald-600"
                 : "text-slate-500 hover:bg-slate-100"
             }`}
-            title={favorited ? "Remove Bookmark" : "Save Bookmark"}
+            title="Bookmark"
           >
             <Bookmark
               className={`w-4 h-4 ${favorited ? "fill-emerald-600 text-emerald-600" : ""}`}
@@ -192,25 +201,14 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
         </div>
       </div>
 
-      {/* 4. TRUE CAPTION BLOCK */}
-      <div className="px-4 pt-2.5 space-y-2">
-        {/* Category · Purpose · Price Line */}
-        <div className="flex items-center justify-between text-xs font-bold">
-          <span className="text-slate-500 text-[11px]">
-            {property.category?.replace(/_/g, " ")} ·{" "}
-            {getPurposeText(property.purpose)}
-          </span>
-          <span className="text-sm font-black text-emerald-600">
-            {formatCurrency(Number(property.priceETB))}
-          </span>
-        </div>
-
+      {/* 4. CAPTION SECTION (FIRST: DESCRIPTION | SECOND: VERTICAL LIST WITH ICONS | THIRD: HORIZONTAL HASHTAGS) */}
+      <div className="px-4 pt-2.5 space-y-2.5">
         {/* Title */}
         <h3 className="font-extrabold text-slate-900 text-sm leading-snug">
           {title}
         </h3>
 
-        {/* Collapsible Description Text */}
+        {/* FIRST: Description Text (Collapsed with ... More) */}
         <div className="text-xs text-slate-600 leading-relaxed font-normal whitespace-pre-line">
           <span>{displayText}</span>
           {shouldTruncate && (
@@ -224,63 +222,76 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
           )}
         </div>
 
-        {/* VERTICAL SPECIFICATIONS LIST & HASHTAGS (Rendered in Caption / Expanded) */}
+        {/* SECOND: Vertical Specifications & Location List with Icons */}
         {(isExpanded || !shouldTruncate) && (
-          <div className="pt-2 border-t border-slate-100 space-y-2 text-xs font-semibold text-slate-700 animate-in fade-in duration-150">
-            <div className="space-y-1">
-              {property.bedrooms !== undefined &&
-                property.bedrooms !== null && (
-                  <div className="flex items-center gap-2">
-                    <Bed className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>{property.bedrooms} Beds</span>
-                  </div>
-                )}
-
-              {property.bathrooms !== undefined &&
-                property.bathrooms !== null && (
-                  <div className="flex items-center gap-2">
-                    <Bath className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>{property.bathrooms} Baths</span>
-                  </div>
-                )}
-
-              {property.areaSqMeters !== undefined &&
-                property.areaSqMeters !== null && (
-                  <div className="flex items-center gap-2">
-                    <Maximize className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>{property.areaSqMeters} m²</span>
-                  </div>
-                )}
-
-              {property.isFurnished && (
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>Furnished</span>
-                </div>
-              )}
-
-              {property.condition && (
-                <div className="flex items-center gap-2">
-                  <Award className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>Condition: {property.condition}</span>
-                </div>
-              )}
-
-              <div className="flex items-center gap-2">
-                <MapPin className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                <span>
-                  Location: {property.areaName},{" "}
-                  {property.subCity ? `${property.subCity}, ` : ""}
-                  {property.region}
-                </span>
-              </div>
+          <div className="pt-2 border-t border-slate-100 space-y-1.5 text-xs font-semibold text-slate-700 animate-in fade-in duration-150">
+            {/* Purpose · Category · Price */}
+            <div className="flex items-center gap-2 text-emerald-600 font-black">
+              <Tag className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>
+                {getPurposeText(property.purpose)} ·{" "}
+                {property.category?.replace(/_/g, " ")} ·{" "}
+                {formatCurrency(Number(property.priceETB))}
+              </span>
             </div>
 
-            {/* Amenity Hashtags */}
+            {/* Location */}
+            <div className="flex items-center gap-2 text-slate-600 font-semibold">
+              <MapPin className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+              <span>
+                {property.areaName},{" "}
+                {property.subCity ? `${property.subCity}, ` : ""}
+                {property.region}
+              </span>
+            </div>
+
+            {/* Bedrooms */}
+            {property.bedrooms !== undefined && property.bedrooms !== null && (
+              <div className="flex items-center gap-2 text-slate-700">
+                <Bed className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <span>{property.bedrooms} Beds</span>
+              </div>
+            )}
+
+            {/* Bathrooms */}
+            {property.bathrooms !== undefined &&
+              property.bathrooms !== null && (
+                <div className="flex items-center gap-2 text-slate-700">
+                  <Bath className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>{property.bathrooms} Baths</span>
+                </div>
+              )}
+
+            {/* Area m² */}
+            {property.areaSqMeters !== undefined &&
+              property.areaSqMeters !== null && (
+                <div className="flex items-center gap-2 text-slate-700">
+                  <Maximize className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>{property.areaSqMeters} m²</span>
+                </div>
+              )}
+
+            {/* Furnished */}
+            {property.isFurnished && (
+              <div className="flex items-center gap-2 text-slate-700">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span>Furnished</span>
+              </div>
+            )}
+
+            {/* Condition */}
+            {property.condition && (
+              <div className="flex items-center gap-2 text-slate-700">
+                <Award className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                <span>Condition: {property.condition}</span>
+              </div>
+            )}
+
+            {/* THIRD: Horizontal Hashtags Row at the Bottom */}
             {amenityHashtags && (
-              <div className="pt-1 text-[11px] font-bold text-emerald-700 leading-relaxed flex items-start gap-1">
-                <Hash className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                <p className="line-clamp-2">{amenityHashtags}</p>
+              <div className="pt-2 border-t border-slate-100/80 text-[11px] font-bold text-emerald-700 flex items-center gap-1.5 flex-wrap">
+                <span className="text-slate-400 font-medium">Features:</span>
+                <span>{amenityHashtags}</span>
               </div>
             )}
           </div>
