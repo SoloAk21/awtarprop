@@ -11,9 +11,12 @@ import {
 import { generateAiAd } from "../api/ai.ts";
 import { SocialFeedPost } from "../components/SocialFeedPost.js";
 import { LocationPickerMap } from "../components/LocationPickerMap.js";
+import {
+  AddisLocationSearch,
+  type AddisPlace,
+} from "../components/AddisLocationSearch.js";
 import { stripEmojis } from "../utils/sanitize.js";
 import {
-  ETHIOPIAN_REGIONS,
   ADDIS_ABABA_SUBCITIES,
   propertyListingSchema,
   type CreatePropertyInput,
@@ -208,15 +211,11 @@ export function PostPropertyPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Lightweight AI Generator States
   const [aiPrompt, setAiPrompt] = useState("");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [aiGeneratedSuccess, setAiGeneratedSuccess] = useState(false);
 
-  // TikTok-style Hashtag State
   const [tagInput, setTagInput] = useState("");
-
-  // Photo Upload State
   const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -236,7 +235,7 @@ export function PostPropertyPage() {
       providerType: (user?.providerType as any) || "OWNER",
       region: "Addis Ababa",
       subCity: "Bole",
-      areaName: "",
+      areaName: "Bole Atlas",
       priceETB: 5000000,
       titleEn: "",
       titleAm: "",
@@ -257,7 +256,6 @@ export function PostPropertyPage() {
   const selectedPurpose = watch("purpose");
   const selectedCategory = watch("category");
   const selectedProviderType = watch("providerType");
-  const selectedRegion = watch("region");
   const selectedSubCity = watch("subCity");
   const selectedAreaName = watch("areaName");
   const selectedPriceETB = watch("priceETB");
@@ -276,11 +274,16 @@ export function PostPropertyPage() {
 
   const isLandCategory = selectedCategory?.includes("LAND");
 
-  const regionOptions = ETHIOPIAN_REGIONS.map((r) => ({ value: r, label: r }));
   const subCityOptions = ADDIS_ABABA_SUBCITIES.map((sc) => ({
     value: sc,
     label: sc,
   }));
+
+  const handleAddisPlaceSelect = (place: AddisPlace) => {
+    setValue("areaName", place.name);
+    setValue("latitude", place.lat);
+    setValue("longitude", place.lon);
+  };
 
   const handleAddHashtag = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -319,7 +322,7 @@ export function PostPropertyPage() {
       setValue("category", result.category);
       setValue("purpose", result.purpose);
       setValue("priceETB", result.priceETB);
-      setValue("region", result.region);
+      setValue("region", "Addis Ababa");
       if (result.subCity) setValue("subCity", result.subCity);
       if (result.areaName) setValue("areaName", stripEmojis(result.areaName));
       if (result.bedrooms) setValue("bedrooms", result.bedrooms);
@@ -365,11 +368,12 @@ export function PostPropertyPage() {
     try {
       const payload: CreatePropertyInput = {
         ...data,
+        region: "Addis Ababa",
         titleEn: stripEmojis(data.titleEn),
         titleAm: stripEmojis(data.titleAm),
         descriptionEn: stripEmojis(data.descriptionEn),
         descriptionAm: stripEmojis(data.descriptionAm),
-        areaName: stripEmojis(data.areaName),
+        areaName: stripEmojis(data.areaName || "Bole Atlas"),
         priceETB: Number(data.priceETB),
         bedrooms: isLandCategory
           ? undefined
@@ -427,9 +431,9 @@ export function PostPropertyPage() {
       isFurnished: selectedIsFurnished,
       condition: selectedCondition,
       amenities: selectedAmenities,
-      region: selectedRegion,
+      region: "Addis Ababa",
       subCity: selectedSubCity,
-      areaName: selectedAreaName || "Landmark Area",
+      areaName: selectedAreaName || "Bole Atlas",
       latitude: selectedLatitude,
       longitude: selectedLongitude,
       providerType: selectedProviderType,
@@ -456,7 +460,6 @@ export function PostPropertyPage() {
     selectedIsFurnished,
     selectedCondition,
     selectedAmenities,
-    selectedRegion,
     selectedSubCity,
     selectedAreaName,
     selectedLatitude,
@@ -490,7 +493,7 @@ export function PostPropertyPage() {
         </div>
       )}
 
-      {/* LIGHTWEIGHT SMART AI AD COPYWRITER CONTAINER */}
+      {/* LIGHTWEIGHT AI COPYWRITER CONTAINER */}
       <div className="p-3.5 bg-slate-900 text-white rounded-2xl shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -500,14 +503,13 @@ export function PostPropertyPage() {
             </span>
           </div>
           <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full border border-emerald-400/30">
-            Auto-Bilingual
+            Addis Ababa
           </span>
         </div>
 
         <p className="text-[11px] text-slate-300 leading-relaxed font-normal">
-          Type property details naturally in English or Amharic. The AI
-          auto-detects furnished state and auto-populates structured bilingual
-          fields.
+          Type property requirements naturally. The AI auto-detects furnished
+          state and auto-populates structured bilingual fields.
         </p>
 
         <div className="space-y-2">
@@ -864,15 +866,17 @@ export function PostPropertyPage() {
           </div>
         </div>
 
-        {/* Location Section & Interactive Map Picker */}
+        {/* Location Section & Photon Auto-Suggest + Map Picker */}
         <div className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl space-y-3">
-          <CustomSearchSelect
-            label="Region *"
-            options={regionOptions}
-            value={selectedRegion}
-            onChange={(val) => setValue("region", val)}
-            placeholder="Select Region..."
-          />
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-slate-700">
+              Property Location / Landmark Search (Addis Ababa) *
+            </label>
+            <AddisLocationSearch
+              value={selectedAreaName}
+              onSelect={handleAddisPlaceSelect}
+            />
+          </div>
 
           <CustomSearchSelect
             label="Sub-city (Addis Ababa)"
@@ -882,22 +886,7 @@ export function PostPropertyPage() {
             placeholder="Select Sub-city..."
           />
 
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
-              Area Name / Landmark *
-            </label>
-            <input
-              type="text"
-              {...register("areaName")}
-              onChange={(e) =>
-                setValue("areaName", stripEmojis(e.target.value))
-              }
-              placeholder="E.g., Bole Atlas, CMC, Sarbet"
-              className="w-full h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-normal focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-
-          {/* Interactive Map Location Picker (Ride App Style) */}
+          {/* Interactive Map Location Picker */}
           <LocationPickerMap
             initialLat={selectedLatitude || 9.0192}
             initialLng={selectedLongitude || 38.7525}

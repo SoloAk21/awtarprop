@@ -6,6 +6,7 @@ import {
   Loader2,
   Building2,
   Navigation2,
+  Crosshair,
 } from "lucide-react";
 
 export interface AddisPlace {
@@ -16,7 +17,6 @@ export interface AddisPlace {
   lon: number;
 }
 
-// Popular top destinations in Addis Ababa for 0-character initial suggestions
 const POPULAR_ADDIS_LOCATIONS: AddisPlace[] = [
   {
     id: "p1",
@@ -83,13 +83,14 @@ interface Props {
 }
 
 export function AddisLocationSearch({
-  placeholder = "Search area, landmark (e.g. Bole, Kazanchis, Piassa)",
+  placeholder = "Search landmark, area name, or street...",
   value = "",
   onSelect,
 }: Props) {
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<AddisPlace[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -110,7 +111,6 @@ export function AddisLocationSearch({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Search exclusively inside Addis Ababa using bbox: minLon,minLat,maxLon,maxLat
   const searchAddis = useCallback(async (searchTerm: string) => {
     if (!searchTerm.trim() || searchTerm.length < 2) {
       setResults([]);
@@ -120,11 +120,10 @@ export function AddisLocationSearch({
 
     setIsLoading(true);
     try {
-      // bbox: 38.65,8.83,38.92,9.09 (Addis Ababa Boundary)
       const bbox = "38.65,8.83,38.92,9.09";
       const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(
         searchTerm,
-      )}&bbox=${bbox}&lat=9.0105&lon=38.7618&limit=10`;
+      )}&bbox=${bbox}&lat=9.0105&lon=38.7618&limit=8`;
 
       const response = await fetch(url);
       const data = await response.json();
@@ -160,7 +159,6 @@ export function AddisLocationSearch({
     }
   }, []);
 
-  // Debounce API calls (280ms)
   useEffect(() => {
     const timer = setTimeout(() => {
       searchAddis(query);
@@ -177,6 +175,44 @@ export function AddisLocationSearch({
     onSelect(place);
   };
 
+  // GPS Current Location Detection
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        const currentPlace: AddisPlace = {
+          id: `gps_${Date.now()}`,
+          name: query.trim() || "My Current GPS Location",
+          subcityOrStreet: "Detected GPS Location, Addis Ababa",
+          lat,
+          lon,
+        };
+        setIsLocating(false);
+        handleSelect(currentPlace);
+      },
+      (err) => {
+        console.warn("GPS location detection failed:", err);
+        setIsLocating(false);
+        // Fallback to Addis Ababa city center
+        handleSelect({
+          id: "fallback_gps",
+          name: query.trim() || "Addis Ababa Center",
+          subcityOrStreet: "Addis Ababa, Ethiopia",
+          lat: 9.0192,
+          lon: 38.7525,
+        });
+      },
+      { timeout: 8000 },
+    );
+  };
+
   const clearInput = () => {
     setQuery("");
     setResults([]);
@@ -184,9 +220,9 @@ export function AddisLocationSearch({
 
   return (
     <div className="relative w-full max-w-md mx-auto" ref={containerRef}>
-      {/* Ride-like Input Bar */}
-      <div className="flex items-center gap-2.5 bg-slate-100/90 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-500 rounded-2xl px-3.5 py-2.5 transition-all border border-slate-200/80 shadow-xs">
-        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100 shrink-0" />
+      {/* Input Bar */}
+      <div className="flex items-center gap-2 bg-slate-100/90 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-500 rounded-2xl px-3.5 py-2.5 transition-all border border-slate-200/80 shadow-xs">
+        <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
         <input
           type="text"
           value={query}
@@ -212,26 +248,75 @@ export function AddisLocationSearch({
 
       {/* Suggestion Dropdown Sheet */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50 divide-y divide-slate-100 animate-in fade-in duration-150">
-          <div className="px-4 py-2 bg-slate-50 flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50 divide-y divide-slate-100 animate-in fade-in duration-150">
+          {/* Current Location Trigger Item */}
+          <button
+            type="button"
+            onMouseDown={handleGetCurrentLocation}
+            disabled={isLocating}
+            className="w-full px-4 py-3 flex items-center gap-3 text-left bg-emerald-50/60 hover:bg-emerald-100/60 text-emerald-800 transition-colors font-bold text-xs"
+          >
+            <div className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+              {isLocating ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Crosshair className="w-3.5 h-3.5" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-emerald-900 leading-tight">
+                Use My Current Location
+              </p>
+              <p className="text-[10px] text-emerald-700 font-medium leading-tight mt-0.5">
+                Detect GPS coordinates automatically
+              </p>
+            </div>
+          </button>
+
+          {/* Custom Typed Name Fallback Option */}
+          {query.trim().length >= 2 && (
+            <button
+              type="button"
+              onMouseDown={() =>
+                handleSelect({
+                  id: `custom_${Date.now()}`,
+                  name: query.trim(),
+                  subcityOrStreet: "Custom Landmark, Addis Ababa",
+                  lat: 9.0192,
+                  lon: 38.7525,
+                })
+              }
+              className="w-full px-4 py-2.5 flex items-center gap-3 text-left hover:bg-slate-50 transition-colors"
+            >
+              <div className="w-7 h-7 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-slate-800 truncate">
+                  Use "{query.trim()}"
+                </p>
+                <p className="text-[10px] text-slate-400">
+                  Save custom landmark name
+                </p>
+              </div>
+            </button>
+          )}
+
+          <div className="px-4 py-1.5 bg-slate-50 flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
             <span>
-              {query.length >= 2
-                ? "Search Results (Addis)"
-                : "Frequent Locations"}
+              {query.length >= 2 ? "Search Results" : "Popular Locations"}
             </span>
-            <span className="text-[10px] text-emerald-600 font-semibold lowercase">
-              Addis Ababa only
-            </span>
+            <span>Addis Ababa</span>
           </div>
 
-          <div className="max-h-64 overflow-y-auto">
+          <div className="max-h-60 overflow-y-auto">
             {(query.length >= 2 ? results : POPULAR_ADDIS_LOCATIONS).map(
               (place) => (
                 <button
                   key={place.id}
                   type="button"
                   onMouseDown={() => handleSelect(place)}
-                  className="w-full px-4 py-3 flex items-start gap-3 text-left hover:bg-emerald-50/50 active:bg-emerald-100/50 transition-colors"
+                  className="w-full px-4 py-2.5 flex items-start gap-3 text-left hover:bg-emerald-50/50 active:bg-emerald-100/50 transition-colors"
                 >
                   <div className="w-7 h-7 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 mt-0.5">
                     {query.length >= 2 ? (
@@ -251,18 +336,6 @@ export function AddisLocationSearch({
                   <Navigation2 className="w-3.5 h-3.5 text-slate-300 -rotate-45 mt-1 shrink-0" />
                 </button>
               ),
-            )}
-
-            {query.length >= 2 && results.length === 0 && !isLoading && (
-              <div className="py-6 text-center text-xs text-slate-400 space-y-1">
-                <p className="font-semibold text-slate-600">
-                  No matching place in Addis Ababa
-                </p>
-                <p className="text-[11px]">
-                  Try checking the spelling or use a nearby landmark (e.g.
-                  "Bole", "Gotera").
-                </p>
-              </div>
             )}
           </div>
         </div>
