@@ -24,6 +24,16 @@ export const updateLanguageSchema = z.object({
   }),
 });
 
+export const updateProviderTypeSchema = z.object({
+  body: z.object({
+    telegramId: z.string().min(1, "Telegram ID is required"),
+    providerType: z.enum(["OWNER", "BROKER", "AGENT", "AGENCY", "DEVELOPER"]),
+  }),
+});
+
 export type TelegramAuthInput = z.infer<typeof telegramAuthSchema>["body"];
 export type UpdatePhoneInput = z.infer<typeof updatePhoneSchema>["body"];
 export type UpdateLanguageInput = z.infer<typeof updateLanguageSchema>["body"];
+export type UpdateProviderTypeInput = z.infer<
+  typeof updateProviderTypeSchema
+>["body"];

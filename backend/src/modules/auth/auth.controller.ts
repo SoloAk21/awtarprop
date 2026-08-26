@@ -56,6 +56,19 @@ export class AuthController {
     }
   };
 
+  public updateProviderType = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const result = await authService.updateUserProviderType(req.body);
+      res.status(200).json({ status: "success", data: result });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getMe = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.user) {

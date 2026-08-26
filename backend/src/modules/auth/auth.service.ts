@@ -2,11 +2,12 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../../config/db.js";
 import { env } from "../../config/env.js";
 import { verifyTelegramInitData } from "../../utils/telegramAuth.js";
-import { UnauthorizedError } from "../../errors/AppError.js";
+import { UnauthorizedError, NotFoundError } from "../../errors/AppError.js";
 import {
   TelegramAuthInput,
   UpdatePhoneInput,
   UpdateLanguageInput,
+  UpdateProviderTypeInput,
 } from "./auth.schema.js";
 import { ProviderType, PreferredLanguage } from "@awtarprop/shared";
 
@@ -22,7 +23,6 @@ export class AuthService {
 
     let validatedTelegram = verifyTelegramInitData(input.initData, botToken);
 
-    // Development fallback when testing outside Telegram WebApp container
     if (!validatedTelegram && env.NODE_ENV === "development") {
       try {
         const urlParams = new URLSearchParams(input.initData);
@@ -158,6 +158,26 @@ export class AuthService {
       id: user.id,
       telegramId: user.telegramId.toString(),
       preferredLanguage: user.preferredLanguage,
+    };
+  }
+
+  public async updateUserProviderType(input: UpdateProviderTypeInput) {
+    const user = await prisma.user.upsert({
+      where: { telegramId: BigInt(input.telegramId) },
+      update: {
+        providerType: input.providerType as ProviderType,
+      },
+      create: {
+        telegramId: BigInt(input.telegramId),
+        firstName: "Telegram User",
+        providerType: input.providerType as ProviderType,
+      },
+    });
+
+    return {
+      id: user.id,
+      telegramId: user.telegramId.toString(),
+      providerType: user.providerType,
     };
   }
 

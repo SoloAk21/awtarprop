@@ -4,6 +4,7 @@ import {
   telegramAuthSchema,
   updatePhoneSchema,
   updateLanguageSchema,
+  updateProviderTypeSchema,
 } from "./auth.schema.js";
 import { validateRequest } from "../../middleware/validate.js";
 import { authenticateJwt } from "../../middleware/authMiddleware.js";
@@ -28,6 +29,12 @@ router.post(
   "/language",
   validateRequest(updateLanguageSchema),
   authController.updateLanguage,
+);
+
+router.post(
+  "/provider-type",
+  validateRequest(updateProviderTypeSchema),
+  authController.updateProviderType,
 );
 
 router.get("/me", authenticateJwt, authController.getMe);

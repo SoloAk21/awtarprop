@@ -31,6 +31,7 @@ interface AuthStore {
     language?: PreferredLanguage,
   ) => Promise<void>;
   updateLanguage: (language: PreferredLanguage) => void;
+  updateProviderType: (providerType: ProviderType) => Promise<void>;
   logout: () => void;
 }
 
@@ -89,13 +90,25 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
   },
 
+  updateProviderType: async (providerType: ProviderType) => {
+    const currentUser = get().user;
+    if (currentUser) {
+      set({ user: { ...currentUser, providerType } });
+      try {
+        await apiClient.post("/auth/provider-type", {
+          telegramId: currentUser.telegramId,
+          providerType,
+        });
+      } catch (err) {}
+    }
+  },
+
   logout: () => {
     localStorage.removeItem("awtarprop_auth_token");
     set({ user: null, token: null, isAuthenticated: false });
   },
 }));
 
-// Atomic Selector Hooks to Prevent Unnecessary Re-renders
 export const useAuthUser = () => useAuthStore((state) => state.user);
 export const useIsAuthenticated = () =>
   useAuthStore((state) => state.isAuthenticated);
