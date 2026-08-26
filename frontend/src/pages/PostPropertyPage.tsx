@@ -10,6 +10,7 @@ import {
 } from "../api/properties.js";
 import { generateAiAd } from "../api/ai.ts";
 import { SocialFeedPost } from "../components/SocialFeedPost.js";
+import { LocationPickerMap } from "../components/LocationPickerMap.js";
 import { stripEmojis } from "../utils/sanitize.js";
 import {
   ETHIOPIAN_REGIONS,
@@ -207,15 +208,12 @@ export function PostPropertyPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // AI Generator States
+  // Lightweight AI Generator States
   const [aiPrompt, setAiPrompt] = useState("");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [aiGeneratedSuccess, setAiGeneratedSuccess] = useState(false);
-  const [reviewTab, setReviewTab] = useState<"EN" | "AM">(
-    currentLanguage === "AM" ? "AM" : "EN",
-  );
 
-  // TikTok-style Hashtag Input State
+  // TikTok-style Hashtag State
   const [tagInput, setTagInput] = useState("");
 
   // Photo Upload State
@@ -251,6 +249,8 @@ export function PostPropertyPage() {
       condition: "EXCELLENT",
       isFurnished: false,
       amenities: ["Parking", "Backup Generator", "Water Tank"],
+      latitude: 9.0192,
+      longitude: 38.7525,
     },
   });
 
@@ -271,6 +271,8 @@ export function PostPropertyPage() {
   const selectedAmenities = watch("amenities") || [];
   const selectedIsFurnished = watch("isFurnished");
   const selectedCondition = watch("condition");
+  const selectedLatitude = watch("latitude");
+  const selectedLongitude = watch("longitude");
 
   const isLandCategory = selectedCategory?.includes("LAND");
 
@@ -280,7 +282,6 @@ export function PostPropertyPage() {
     label: sc,
   }));
 
-  // Handle TikTok-style Hashtag Add
   const handleAddHashtag = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const cleanTag = stripEmojis(tagInput.replace(/#/g, "")).trim();
@@ -299,7 +300,6 @@ export function PostPropertyPage() {
     );
   };
 
-  // AI Prompt Ad Generator
   const handleGenerateAiAd = async (promptToUse?: string) => {
     const textPrompt = stripEmojis(promptToUse || aiPrompt);
     if (!textPrompt || textPrompt.trim().length < 5) return;
@@ -325,16 +325,11 @@ export function PostPropertyPage() {
       if (result.bedrooms) setValue("bedrooms", result.bedrooms);
       if (result.bathrooms) setValue("bathrooms", result.bathrooms);
       if (result.areaSqMeters) setValue("areaSqMeters", result.areaSqMeters);
-
-      // Auto toggle furnished based on AI detection
-      if (result.isFurnished !== undefined) {
+      if (result.isFurnished !== undefined)
         setValue("isFurnished", result.isFurnished);
-      }
-
       if (result.amenities) setValue("amenities", result.amenities);
 
       setAiGeneratedSuccess(true);
-      setReviewTab(currentLanguage === "AM" ? "AM" : "EN");
     } catch (err: any) {
       setSubmitError(
         "AI generation failed. Please review your prompt or enter details manually.",
@@ -410,7 +405,6 @@ export function PostPropertyPage() {
     }
   });
 
-  // Construct Live Feed Card Preview Object
   const livePreviewProperty = useMemo(() => {
     const mockImages = photoPreviews.map((url, idx) => ({
       id: `preview_${idx}`,
@@ -436,6 +430,8 @@ export function PostPropertyPage() {
       region: selectedRegion,
       subCity: selectedSubCity,
       areaName: selectedAreaName || "Landmark Area",
+      latitude: selectedLatitude,
+      longitude: selectedLongitude,
       providerType: selectedProviderType,
       viewsCount: 0,
       images: mockImages,
@@ -463,6 +459,8 @@ export function PostPropertyPage() {
     selectedRegion,
     selectedSubCity,
     selectedAreaName,
+    selectedLatitude,
+    selectedLongitude,
     selectedProviderType,
     photoPreviews,
     user,
@@ -492,35 +490,35 @@ export function PostPropertyPage() {
         </div>
       )}
 
-      {/* PROMPT-FIRST AI GENERATOR CONTAINER */}
-      <div className="p-3.5 bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 text-white rounded-2xl shadow-sm space-y-3">
+      {/* LIGHTWEIGHT SMART AI AD COPYWRITER CONTAINER */}
+      <div className="p-3.5 bg-slate-900 text-white rounded-2xl shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs font-extrabold tracking-tight">
-              AI Bilingual Ad Generator
+            <span className="text-xs font-bold tracking-tight">
+              Smart AI Ad Copywriter
             </span>
           </div>
           <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full border border-emerald-400/30">
-            Gemini AI
+            Auto-Bilingual
           </span>
         </div>
 
         <p className="text-[11px] text-slate-300 leading-relaxed font-normal">
-          Enter property requirements naturally. Gemini auto-detects furnished
-          state, pricing, and generates bilingual ads.
+          Type property details naturally in English or Amharic. The AI
+          auto-detects furnished state and auto-populates structured bilingual
+          fields.
         </p>
 
         <div className="space-y-2">
           <textarea
-            rows={3}
+            rows={2}
             value={aiPrompt}
             onChange={(e) => setAiPrompt(stripEmojis(e.target.value))}
             placeholder="E.g., 3 bedroom furnished apartment in Bole Atlas for rent 80k ETB with generator & water tank..."
             className="w-full text-xs p-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-400 font-normal resize-none"
           />
 
-          {/* Quick Example Prompt Chips */}
           <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {EXAMPLE_PROMPTS.map((ex, i) => (
               <button
@@ -541,17 +539,17 @@ export function PostPropertyPage() {
             type="button"
             onClick={() => handleGenerateAiAd()}
             disabled={isAiGenerating || aiPrompt.trim().length < 5}
-            className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50 transition-colors shadow-xs"
+            className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50 transition-colors shadow-xs"
           >
             {isAiGenerating ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Generating Bilingual Ad...</span>
+                <span>Generating Ad...</span>
               </>
             ) : (
               <>
                 <Wand2 className="w-3.5 h-3.5" />
-                <span>Generate Ad with Gemini AI</span>
+                <span>Auto-Generate Ad Fields</span>
               </>
             )}
           </button>
@@ -695,11 +693,7 @@ export function PostPropertyPage() {
               {...register("titleEn")}
               onChange={(e) => setValue("titleEn", stripEmojis(e.target.value))}
               placeholder="E.g., Modern 3 Bedroom Apartment in Bole Atlas"
-              className={`w-full h-9 px-3 text-xs bg-white border rounded-lg font-normal focus:outline-none ${
-                errors.titleEn
-                  ? "border-red-400 bg-red-50/20"
-                  : "border-slate-200 focus:border-emerald-500"
-              }`}
+              className="w-full h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-normal focus:outline-none focus:border-emerald-500"
             />
           </div>
 
@@ -712,11 +706,7 @@ export function PostPropertyPage() {
               {...register("titleAm")}
               onChange={(e) => setValue("titleAm", stripEmojis(e.target.value))}
               placeholder="ምሳሌ፦ በቦሌ አትላስ ዘመናዊ የ 3 መኝታ አፓርትመንት"
-              className={`w-full h-9 px-3 text-xs bg-white border rounded-lg font-normal focus:outline-none ${
-                errors.titleAm
-                  ? "border-red-400 bg-red-50/20"
-                  : "border-slate-200 focus:border-emerald-500"
-              }`}
+              className="w-full h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-normal focus:outline-none focus:border-emerald-500"
             />
           </div>
 
@@ -727,7 +717,7 @@ export function PostPropertyPage() {
             <input
               type="number"
               {...register("priceETB", { valueAsNumber: true })}
-              className="w-full h-9 px-3 text-xs bg-white border rounded-lg font-semibold text-emerald-700 focus:outline-none border-slate-200 focus:border-emerald-500"
+              className="w-full h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-semibold text-emerald-700 focus:outline-none focus:border-emerald-500"
             />
           </div>
         </div>
@@ -794,7 +784,6 @@ export function PostPropertyPage() {
                 Amenities & Features (#Hashtags)
               </label>
 
-              {/* Tag Input Box */}
               <div className="flex gap-1.5">
                 <div className="relative flex-1">
                   <Hash className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
@@ -821,7 +810,6 @@ export function PostPropertyPage() {
                 </button>
               </div>
 
-              {/* Hashtags Active List */}
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {selectedAmenities.map((tag: string) => (
                   <span
@@ -876,7 +864,7 @@ export function PostPropertyPage() {
           </div>
         </div>
 
-        {/* Location Section */}
+        {/* Location Section & Interactive Map Picker */}
         <div className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl space-y-3">
           <CustomSearchSelect
             label="Region *"
@@ -908,9 +896,19 @@ export function PostPropertyPage() {
               className="w-full h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-normal focus:outline-none focus:border-emerald-500"
             />
           </div>
+
+          {/* Interactive Map Location Picker (Ride App Style) */}
+          <LocationPickerMap
+            initialLat={selectedLatitude || 9.0192}
+            initialLng={selectedLongitude || 38.7525}
+            onSelectLocation={(lat, lng) => {
+              setValue("latitude", lat);
+              setValue("longitude", lng);
+            }}
+          />
         </div>
 
-        {/* LIVE SOCIAL FEED CARD PREVIEW AT THE BOTTOM */}
+        {/* LIVE SOCIAL FEED CARD PREVIEW */}
         <div className="pt-2 space-y-2">
           <div className="flex items-center justify-between px-1">
             <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">

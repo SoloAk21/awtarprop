@@ -25,9 +25,6 @@ export interface SocialFeedPostProps {
   onOpenDetails?: (property: any) => void;
 }
 
-/**
- * Calculates relative time ago from ISO date string.
- */
 function formatTimeAgo(dateString?: string): string {
   if (!dateString) return "Just now";
   const now = new Date();
@@ -52,7 +49,6 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
   const favoriteIds = useFavoritesStore((state) => state.favoriteIds);
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
 
-  // Collapse state applies strictly to description text
   const [isExpanded, setIsExpanded] = useState(false);
 
   const title = currentLanguage === "AM" ? property.titleAm : property.titleEn;
@@ -114,6 +110,20 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
     [property.priceETB, title, formatCurrency],
   );
 
+  const handleOpenMapLocation = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const mapUrl =
+      property.latitude && property.longitude
+        ? `https://www.google.com/maps/search/?api=1&query=${property.latitude},${property.longitude}`
+        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property.areaName}, ${property.subCity || ""}, ${property.region}`)}`;
+
+    if (window.Telegram?.WebApp?.openLink) {
+      window.Telegram.WebApp.openLink(mapUrl);
+    } else {
+      window.open(mapUrl, "_blank");
+    }
+  };
+
   const telegramUsername = property.provider?.username;
   const contactPhone = property.provider?.phoneNumber;
   const timeAgoText = useMemo(
@@ -123,21 +133,22 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
 
   return (
     <article className="bg-white border-b border-slate-100 pb-3 mb-2">
-      {/* 1. USER HEADER WITH POSTED TIME */}
+      {/* 1. USER / PROVIDER HEADER */}
       <div className="px-4 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-full flex items-center justify-center font-bold text-xs shadow-xs shrink-0 relative">
+          <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-full flex items-center justify-center font-extrabold text-xs shadow-xs shrink-0 relative">
             {property.provider?.firstName?.charAt(0) || "U"}
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full" />
           </div>
           <div>
-            <div className="flex items-center gap-1.5">
-              <h4 className="font-semibold text-slate-900 text-xs leading-none">
+            <div className="flex items-center gap-1">
+              <h4 className="font-bold text-slate-900 text-xs leading-none">
                 {property.provider?.firstName}{" "}
                 {property.provider?.lastName || ""}
               </h4>
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span className="text-[10px] font-semibold text-slate-500">
-                • {property.providerType}
+              <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+              <span className="text-[9px] font-extrabold bg-slate-100 text-slate-700 px-1.5 py-0.25 rounded uppercase">
+                {property.providerType}
               </span>
             </div>
             <p className="text-[10px] text-slate-400 font-medium leading-none mt-1">
@@ -161,20 +172,19 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
         onImageClick={(index) => onOpenImageIndex(property, index)}
       />
 
-      {/* 3. NAKED COMPACT ACTION BAR (NO CARD BACKGROUNDS) */}
+      {/* 3. COMPACT ACTION BAR */}
       <div className="px-4 py-2 flex items-center justify-between border-b border-slate-100/80">
-        {/* Left Naked Icons */}
-        <div className="flex items-center gap-4 text-slate-700">
+        <div className="flex items-center gap-1">
           {telegramUsername && (
             <a
               href={`https://t.me/${telegramUsername}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="text-slate-700 hover:text-emerald-600 transition-colors"
+              className="p-2 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors"
               title="Chat"
             >
-              <Send className="w-4 h-4 stroke-[2]" />
+              <Send className="w-4 h-4" />
             </a>
           )}
 
@@ -182,71 +192,70 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
             <a
               href={`tel:${contactPhone}`}
               onClick={(e) => e.stopPropagation()}
-              className="text-slate-700 hover:text-emerald-600 transition-colors"
+              className="p-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
               title="Call"
             >
-              <Phone className="w-4 h-4 stroke-[2]" />
+              <Phone className="w-4 h-4" />
             </a>
           )}
 
           <button
             type="button"
             onClick={handleShare}
-            className="text-slate-700 hover:text-emerald-600 transition-colors"
+            className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
             title="Share"
           >
-            <Share2 className="w-4 h-4 stroke-[2]" />
+            <Share2 className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Right Naked Icons (Views + Bookmark Icon Only) */}
-        <div className="flex items-center gap-3 text-slate-500 text-xs font-medium">
-          <div className="flex items-center gap-1">
-            <Eye className="w-4 h-4 stroke-[2] text-slate-500" />
-            <span className="text-[11px] font-medium">
-              {property.viewsCount || 0}
-            </span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 px-2 py-1 bg-slate-50 rounded-lg">
+            <Eye className="w-3.5 h-3.5 text-emerald-600" />
+            <span>{property.viewsCount || 0}</span>
           </div>
 
           <button
             type="button"
             onClick={() => toggleFavorite(property.id)}
-            className="text-slate-700 hover:text-emerald-600 transition-colors"
+            className={`p-2 rounded-xl transition-colors ${
+              favorited
+                ? "bg-emerald-50 text-emerald-600"
+                : "text-slate-500 hover:bg-slate-100"
+            }`}
             title="Bookmark"
           >
             <Bookmark
-              className={`w-4 h-4 stroke-[2] ${favorited ? "fill-emerald-600 text-emerald-600" : "text-slate-700"}`}
+              className={`w-4 h-4 ${favorited ? "fill-emerald-600 text-emerald-600" : ""}`}
             />
           </button>
         </div>
       </div>
 
       {/* 4. CAPTION SECTION */}
-      <div className="px-4 pt-2.5 space-y-2">
-        {/* Title */}
-        <h3 className="font-bold text-slate-900 text-sm leading-snug">
+      <div className="px-4 pt-2.5 space-y-2.5">
+        <h3 className="font-extrabold text-slate-900 text-sm leading-snug">
           {title}
         </h3>
 
-        {/* FIRST: Description Text (ISOLATED COLLAPSE WITH ... More) */}
+        {/* Description Text */}
         <div className="text-xs text-slate-600 leading-relaxed font-normal whitespace-pre-line">
           <span>{displayText}</span>
           {shouldTruncate && (
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="ml-1 text-emerald-600 font-semibold hover:underline"
+              className="ml-1 text-emerald-600 font-bold hover:underline"
             >
               {isExpanded ? "Less" : "... More"}
             </button>
           )}
         </div>
 
-        {/* SECOND: Vertical Specifications & Location List (ALWAYS VISIBLE) */}
-        <div className="pt-2 border-t border-slate-100 space-y-1.5 text-xs font-medium text-slate-700">
-          {/* Purpose · Category · Price */}
-          <div className="flex items-center gap-2 text-emerald-700 font-bold">
-            <Tag className="w-3.5 h-3.5 stroke-[2] text-emerald-600 shrink-0" />
+        {/* Vertical Specifications & Clickable Map Location Link */}
+        <div className="pt-2 border-t border-slate-100 space-y-1.5 text-xs font-semibold text-slate-700">
+          <div className="flex items-center gap-2 text-emerald-600 font-black">
+            <Tag className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span>
               {getPurposeText(property.purpose)} ·{" "}
               {property.category?.replace(/_/g, " ")} ·{" "}
@@ -254,60 +263,58 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
             </span>
           </div>
 
-          {/* Location */}
-          <div className="flex items-center gap-2 text-slate-600 font-medium">
-            <MapPin className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
-            <span>
+          {/* Clickable Map Location Link */}
+          <button
+            type="button"
+            onClick={handleOpenMapLocation}
+            className="flex items-center gap-2 text-slate-700 font-semibold hover:text-emerald-700 text-left transition-colors"
+          >
+            <MapPin className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+            <span className="underline decoration-dotted underline-offset-2">
               {property.areaName},{" "}
               {property.subCity ? `${property.subCity}, ` : ""}
               {property.region}
             </span>
-          </div>
+          </button>
 
-          {/* Bedrooms */}
           {property.bedrooms !== undefined && property.bedrooms !== null && (
             <div className="flex items-center gap-2 text-slate-700">
-              <Bed className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+              <Bed className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <span>{property.bedrooms} Beds</span>
             </div>
           )}
 
-          {/* Bathrooms */}
           {property.bathrooms !== undefined && property.bathrooms !== null && (
             <div className="flex items-center gap-2 text-slate-700">
-              <Bath className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+              <Bath className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <span>{property.bathrooms} Baths</span>
             </div>
           )}
 
-          {/* Area m² */}
           {property.areaSqMeters !== undefined &&
             property.areaSqMeters !== null && (
               <div className="flex items-center gap-2 text-slate-700">
-                <Maximize className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+                <Maximize className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 <span>{property.areaSqMeters} m²</span>
               </div>
             )}
 
-          {/* Furnished */}
           {property.isFurnished && (
             <div className="flex items-center gap-2 text-slate-700">
-              <Sparkles className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
               <span>Furnished</span>
             </div>
           )}
 
-          {/* Condition */}
           {property.condition && (
             <div className="flex items-center gap-2 text-slate-700">
-              <Award className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+              <Award className="w-3.5 h-3.5 text-blue-500 shrink-0" />
               <span>Condition: {property.condition}</span>
             </div>
           )}
 
-          {/* THIRD: Horizontal Hashtags Row */}
           {amenityHashtags && (
-            <div className="pt-2 border-t border-slate-100 text-[11px] font-semibold text-emerald-700 flex items-center gap-1.5 flex-wrap">
+            <div className="pt-2 border-t border-slate-100/80 text-[11px] font-bold text-emerald-700 flex items-center gap-1.5 flex-wrap">
               <span className="text-slate-400 font-normal">Features:</span>
               <span>{amenityHashtags}</span>
             </div>
