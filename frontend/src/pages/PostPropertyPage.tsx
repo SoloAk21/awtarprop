@@ -1,9 +1,13 @@
+import React, { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "../hooks/useTranslation.js";
 import { useAuthStore } from "../store/useAuthStore.js";
-import { createPropertyListing } from "../api/properties.js";
+import {
+  createPropertyListing,
+  uploadPropertyImages,
+} from "../api/properties.js";
 import {
   ETHIOPIAN_REGIONS,
   ADDIS_ABABA_SUBCITIES,
@@ -21,8 +25,10 @@ import {
   ChevronDown,
   X,
   Check,
+  Camera,
+  Image as ImageIcon,
+  Loader2,
 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
 
 const COMMON_AMENITIES = [
   "Parking",
@@ -65,9 +71,8 @@ const PURPOSE_OPTIONS = [
   { id: "LOOKING_TO_RENT", label: "Looking to Rent", icon: Tag },
 ];
 
-const FLAT_PUBLICATION_FEE = 150; // Flat fee for all listings
+const FLAT_PUBLICATION_FEE = 150;
 
-/* Custom Searchable Select Dropdown Component */
 interface SearchSelectProps {
   options: { value: string; label: string }[];
   value: string;
@@ -203,6 +208,11 @@ export function PostPropertyPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Photo Upload State
+  const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const {
     register,
     handleSubmit,
@@ -250,6 +260,28 @@ export function PostPropertyPage() {
     label: sc,
   }));
 
+  // Handle Photo Selection
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      const combinedFiles = [...selectedPhotos, ...newFiles].slice(0, 5);
+      setSelectedPhotos(combinedFiles);
+
+      // Create preview object URLs
+      const newPreviews = combinedFiles.map((file) =>
+        URL.createObjectURL(file),
+      );
+      setPhotoPreviews(newPreviews);
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    const updatedFiles = selectedPhotos.filter((_, i) => i !== index);
+    const updatedPreviews = photoPreviews.filter((_, i) => i !== index);
+    setSelectedPhotos(updatedFiles);
+    setPhotoPreviews(updatedPreviews);
+  };
+
   const toggleAmenity = (amenity: string) => {
     if (selectedAmenities.includes(amenity)) {
       setValue(
@@ -281,7 +313,18 @@ export function PostPropertyPage() {
         areaSqMeters: data.areaSqMeters ? Number(data.areaSqMeters) : undefined,
       };
 
-      await createPropertyListing(payload);
+      // 1. Create property entry in database
+      const property = await createPropertyListing(payload);
+
+      // 2. Upload attached photos if selected
+      if (selectedPhotos.length > 0) {
+        const formData = new FormData();
+        selectedPhotos.forEach((file) => {
+          formData.append("photos", file);
+        });
+        await uploadPropertyImages(property.id, formData);
+      }
+
       navigate("/profile");
     } catch (err: any) {
       setSubmitError(
@@ -339,9 +382,7 @@ export function PostPropertyPage() {
                   }`}
                 >
                   <Icon
-                    className={`w-3.5 h-3.5 ${
-                      isSelected ? "text-white" : "text-slate-400"
-                    }`}
+                    className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-slate-400"}`}
                   />
                   <span>{item.label}</span>
                 </button>
@@ -383,6 +424,66 @@ export function PostPropertyPage() {
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* MULTI-PHOTO UPLOAD SECTION */}
+        <div className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-medium text-slate-700">
+              Property Photos ({selectedPhotos.length}/5)
+            </label>
+            <span className="text-[10px] text-slate-400 font-normal">
+              JPEG, PNG, WebP
+            </span>
+          </div>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            multiple
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handlePhotoSelect}
+            className="hidden"
+          />
+
+          {/* Photo Preview Grid */}
+          <div className="grid grid-cols-5 gap-1.5 pt-1">
+            {photoPreviews.map((url, idx) => (
+              <div
+                key={url}
+                className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group"
+              >
+                <img
+                  src={url}
+                  alt={`Preview ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => removePhoto(idx)}
+                  className="absolute top-0.5 right-0.75 bg-black/60 text-white p-0.5 rounded-full hover:bg-black/80"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+                {idx === 0 && (
+                  <span className="absolute bottom-0 inset-x-0 bg-emerald-600/90 text-white text-[8px] font-bold text-center py-0.25">
+                    Main
+                  </span>
+                )}
+              </div>
+            ))}
+
+            {selectedPhotos.length < 5 && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="aspect-square rounded-lg border-2 border-dashed border-slate-200 bg-white flex flex-col items-center justify-center text-slate-400 hover:border-emerald-500 hover:text-emerald-600 transition-colors"
+              >
+                <Camera className="w-4 h-4" />
+                <span className="text-[9px] font-medium mt-0.5">Add</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -631,8 +732,8 @@ export function PostPropertyPage() {
             </span>
           </div>
           <p className="text-[10px] text-emerald-800 leading-normal font-normal">
-            Submitting creates a draft in your portfolio. You can upload photos
-            and complete checkout to publish live.
+            Submitting creates a draft in your portfolio with your uploaded
+            photos attached.
           </p>
         </div>
 
@@ -642,10 +743,17 @@ export function PostPropertyPage() {
           disabled={isSubmitting}
           className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-medium rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50 transition-colors shadow-xs"
         >
-          <CheckCircle2 className="w-4 h-4" />
-          <span>
-            {isSubmitting ? "Creating Draft..." : "Create Draft & Continue"}
-          </span>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Uploading & Creating Draft...</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Create Draft ({selectedPhotos.length} photos)</span>
+            </>
+          )}
         </button>
       </form>
     </div>

@@ -1,12 +1,14 @@
-import { prisma } from '../../config/db.js';
-import { Prisma } from '@prisma/client';
+import { prisma } from "../../config/db.js";
+import { Prisma } from "@prisma/client";
 
 export class PropertyRepository {
   public async create(data: Prisma.PropertyListingCreateInput) {
     return prisma.propertyListing.create({
       data,
       include: {
-        images: true,
+        images: {
+          orderBy: { order: "asc" },
+        },
         provider: {
           select: {
             id: true,
@@ -25,7 +27,9 @@ export class PropertyRepository {
     return prisma.propertyListing.findUnique({
       where: { id },
       include: {
-        images: true,
+        images: {
+          orderBy: { order: "asc" },
+        },
         provider: {
           select: {
             id: true,
@@ -43,7 +47,7 @@ export class PropertyRepository {
   public async findMany(
     where: Prisma.PropertyListingWhereInput,
     limit = 20,
-    offset = 0
+    offset = 0,
   ) {
     const [total, properties] = await Promise.all([
       prisma.propertyListing.count({ where }),
@@ -51,9 +55,11 @@ export class PropertyRepository {
         where,
         take: limit,
         skip: offset,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: {
-          images: true,
+          images: {
+            orderBy: { order: "asc" },
+          },
           provider: {
             select: {
               id: true,
@@ -68,15 +74,34 @@ export class PropertyRepository {
       }),
     ]);
 
+    console.log(
+      "[PropertyRepository.findMany] Total count:",
+      total,
+      "properties count:",
+      properties.length,
+    );
+    if (properties.length > 0) {
+      console.log(
+        "[PropertyRepository.findMany] Property 0 ID:",
+        properties[0].id,
+        "Images count:",
+        properties[0].images?.length,
+        "Sample image:",
+        properties[0].images?.[0],
+      );
+    }
+
     return { total, properties };
   }
 
   public async findByProviderId(providerId: string) {
     return prisma.propertyListing.findMany({
       where: { providerId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
-        images: true,
+        images: {
+          orderBy: { order: "asc" },
+        },
       },
     });
   }

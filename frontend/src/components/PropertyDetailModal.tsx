@@ -1,4 +1,5 @@
 import { useTranslation } from "../hooks/useTranslation.js";
+import { PropertyImageGallery } from "./PropertyImageGallery.js";
 import {
   X,
   MapPin,
@@ -54,13 +55,14 @@ export function PropertyDetailModal({
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-white w-full max-w-md max-h-[90vh] rounded-t-3xl sm:rounded-3xl overflow-y-auto flex flex-col animate-in slide-in-from-bottom duration-200">
         {/* Header Bar */}
-        <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md px-4 py-3 border-b border-slate-100 flex items-center justify-between">
           <span className="text-xs font-bold px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full">
             {property.category?.replace(/_/g, " ")}
           </span>
 
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={handleShareListing}
               className="p-1.5 bg-slate-100 text-slate-700 rounded-full hover:bg-slate-200 transition-colors"
             >
@@ -68,6 +70,7 @@ export function PropertyDetailModal({
             </button>
 
             <button
+              type="button"
               onClick={onClose}
               className="p-1.5 bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200 transition-colors"
             >
@@ -76,8 +79,13 @@ export function PropertyDetailModal({
           </div>
         </div>
 
+        {/* Cloudinary Photo Gallery Carousel */}
+        <div className="p-4 pb-0">
+          <PropertyImageGallery images={property.images || []} title={title} />
+        </div>
+
         {/* Content */}
-        <div className="p-5 space-y-4 flex-1">
+        <div className="p-4 space-y-4 flex-1">
           {/* Price & Title */}
           <div>
             <span className="text-xl font-extrabold text-emerald-600">
@@ -88,7 +96,7 @@ export function PropertyDetailModal({
             </h2>
           </div>
 
-          {/* Location details */}
+          {/* Location Details */}
           <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium bg-slate-50 p-3 rounded-xl border border-slate-100">
             <MapPin className="w-4 h-4 text-emerald-500 shrink-0" />
             <span>

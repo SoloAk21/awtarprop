@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../../config/db.js";
 import { env } from "../../config/env.js";
 import { verifyTelegramInitData } from "../../utils/telegramAuth.js";
-import { UnauthorizedError, NotFoundError } from "../../errors/AppError.js";
+import { UnauthorizedError } from "../../errors/AppError.js";
 import {
   TelegramAuthInput,
   UpdatePhoneInput,
@@ -22,17 +22,25 @@ export class AuthService {
 
     let validatedTelegram = verifyTelegramInitData(input.initData, botToken);
 
-    if (
-      !validatedTelegram &&
-      env.NODE_ENV === "development" &&
-      botToken.includes("your_telegram_bot_token")
-    ) {
+    // Development fallback when testing outside Telegram WebApp container
+    if (!validatedTelegram && env.NODE_ENV === "development") {
       try {
         const urlParams = new URLSearchParams(input.initData);
         const userStr = urlParams.get("user");
         if (userStr) {
           validatedTelegram = {
             user: JSON.parse(userStr),
+            authDate: Math.floor(Date.now() / 1000),
+            hash: "dev_mock_hash",
+          };
+        } else {
+          validatedTelegram = {
+            user: {
+              id: 123456789,
+              first_name: "Abebe",
+              last_name: "Bikila",
+              username: "abebe_b",
+            },
             authDate: Math.floor(Date.now() / 1000),
             hash: "dev_mock_hash",
           };
