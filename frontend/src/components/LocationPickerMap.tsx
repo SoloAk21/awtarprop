@@ -1,9 +1,15 @@
-import React, { useState } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import React, { useState, useEffect } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMapEvents,
+  useMap,
+} from "react-leaflet";
 import L from "leaflet";
-import { MapPin, Search } from "lucide-react";
+import { MapPin } from "lucide-react";
+import { findSubCityByCoordinates } from "../utils/addisSubcities.js";
 
-// Fix default Leaflet marker icon asset issue in Vite
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -18,7 +24,15 @@ L.Icon.Default.mergeOptions({
 export interface LocationPickerMapProps {
   initialLat?: number;
   initialLng?: number;
-  onSelectLocation: (lat: number, lng: number) => void;
+  onSelectLocation: (lat: number, lng: number, detectedSubCity: string) => void;
+}
+
+function MapController({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.flyTo(center, 15, { duration: 1.2 });
+  }, [center, map]);
+  return null;
 }
 
 function LocationMarker({
@@ -46,27 +60,38 @@ export function LocationPickerMap({
     initialLat,
     initialLng,
   ]);
+  const [detectedSubCity, setDetectedSubCity] = useState<string>("Bole");
+
+  useEffect(() => {
+    if (initialLat && initialLng) {
+      setPosition([initialLat, initialLng]);
+      const sub = findSubCityByCoordinates(initialLat, initialLng);
+      setDetectedSubCity(sub);
+    }
+  }, [initialLat, initialLng]);
 
   const handlePositionChange = (newPos: [number, number]) => {
     setPosition(newPos);
-    onSelectLocation(newPos[0], newPos[1]);
+    const sub = findSubCityByCoordinates(newPos[0], newPos[1]);
+    setDetectedSubCity(sub);
+    onSelectLocation(newPos[0], newPos[1], sub);
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-xs font-bold text-slate-800 px-0.5">
         <span className="flex items-center gap-1">
           <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Pick Exact Location on Map</span>
+          <span>Interactive Location Pin</span>
         </span>
-        <span className="text-[10px] text-slate-400 font-medium">
-          Tap map to set pin
+        <span className="text-[10px] text-emerald-700 font-extrabold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+          Detected: {detectedSubCity} Sub-city
         </span>
       </div>
 
-      <div className="w-full h-48 rounded-xl overflow-hidden border border-slate-200 shadow-xs relative z-0">
+      <div className="w-full h-48 rounded-xl overflow-hidden border border-slate-200/80 shadow-xs relative z-0">
         <MapContainer
-          center={[initialLat, initialLng]}
+          center={position}
           zoom={13}
           scrollWheelZoom={false}
           className="w-full h-full"
@@ -75,6 +100,7 @@ export function LocationPickerMap({
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          <MapController center={position} />
           <LocationMarker
             position={position}
             setPosition={handlePositionChange}
@@ -82,9 +108,14 @@ export function LocationPickerMap({
         </MapContainer>
       </div>
 
-      <p className="text-[10px] text-slate-400 font-medium text-center">
-        GPS Coordinates: {position[0].toFixed(5)}, {position[1].toFixed(5)}
-      </p>
+      <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium px-1">
+        <span>
+          GPS: {position[0].toFixed(5)}, {position[1].toFixed(5)}
+        </span>
+        <span className="text-emerald-700 font-bold">
+          Sub-city Auto-Detected
+        </span>
+      </div>
     </div>
   );
 }

@@ -8,11 +8,13 @@ import {
   Navigation2,
   Crosshair,
 } from "lucide-react";
+import { findSubCityByCoordinates } from "../utils/addisSubcities.js";
 
 export interface AddisPlace {
   id: string;
   name: string;
   subcityOrStreet: string;
+  subCity: string;
   lat: number;
   lon: number;
 }
@@ -22,6 +24,7 @@ const POPULAR_ADDIS_LOCATIONS: AddisPlace[] = [
     id: "p1",
     name: "Bole Medhanialem",
     subcityOrStreet: "Bole Sub-City, Addis Ababa",
+    subCity: "Bole",
     lat: 8.9961,
     lon: 38.7885,
   },
@@ -29,6 +32,7 @@ const POPULAR_ADDIS_LOCATIONS: AddisPlace[] = [
     id: "p2",
     name: "Meskel Square",
     subcityOrStreet: "Kirkos Sub-City, Addis Ababa",
+    subCity: "Kirkos",
     lat: 9.0105,
     lon: 38.7618,
   },
@@ -36,6 +40,7 @@ const POPULAR_ADDIS_LOCATIONS: AddisPlace[] = [
     id: "p3",
     name: "Mexico Square",
     subcityOrStreet: "Lideta Sub-City, Addis Ababa",
+    subCity: "Lideta",
     lat: 9.0125,
     lon: 38.7423,
   },
@@ -43,6 +48,7 @@ const POPULAR_ADDIS_LOCATIONS: AddisPlace[] = [
     id: "p4",
     name: "Megenagna (Zefmesh Mall)",
     subcityOrStreet: "Yeka Sub-City, Addis Ababa",
+    subCity: "Yeka",
     lat: 9.0207,
     lon: 38.8021,
   },
@@ -50,6 +56,7 @@ const POPULAR_ADDIS_LOCATIONS: AddisPlace[] = [
     id: "p5",
     name: "Piazza (Churchill Ave)",
     subcityOrStreet: "Arada Sub-City, Addis Ababa",
+    subCity: "Arada",
     lat: 9.0345,
     lon: 38.7519,
   },
@@ -57,6 +64,7 @@ const POPULAR_ADDIS_LOCATIONS: AddisPlace[] = [
     id: "p6",
     name: "CMC Michael",
     subcityOrStreet: "Yeka / Bole, Addis Ababa",
+    subCity: "Yeka",
     lat: 9.0195,
     lon: 38.8471,
   },
@@ -64,6 +72,7 @@ const POPULAR_ADDIS_LOCATIONS: AddisPlace[] = [
     id: "p7",
     name: "Bole International Airport (T2)",
     subcityOrStreet: "Airport Rd, Addis Ababa",
+    subCity: "Bole",
     lat: 8.9806,
     lon: 38.7994,
   },
@@ -71,6 +80,7 @@ const POPULAR_ADDIS_LOCATIONS: AddisPlace[] = [
     id: "p8",
     name: "Sarbet / Old Airport",
     subcityOrStreet: "Nifas Silk-Lafto, Addis Ababa",
+    subCity: "Nifas Silk-Lafto",
     lat: 9.0001,
     lon: 38.7355,
   },
@@ -131,10 +141,15 @@ export function AddisLocationSearch({
       const mapped: AddisPlace[] = (data.features || []).map(
         (item: any, i: number) => {
           const p = item.properties;
+          const lat = item.geometry.coordinates[1];
+          const lon = item.geometry.coordinates[0];
+
+          // Mathematical sub-city calculation
+          const subCity = findSubCityByCoordinates(lat, lon);
 
           const subDetails = [
             p.street,
-            p.district || p.suburb,
+            p.district || p.suburb || `${subCity} Sub-City`,
             p.city || "Addis Ababa",
           ]
             .filter(Boolean)
@@ -144,8 +159,9 @@ export function AddisLocationSearch({
             id: `${p.osm_id || i}`,
             name: p.name || p.street || "Addis Ababa Location",
             subcityOrStreet: subDetails || "Addis Ababa, Ethiopia",
-            lat: item.geometry.coordinates[1],
-            lon: item.geometry.coordinates[0],
+            subCity,
+            lat,
+            lon,
           };
         },
       );
@@ -175,7 +191,6 @@ export function AddisLocationSearch({
     onSelect(place);
   };
 
-  // GPS Current Location Detection
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser");
@@ -187,10 +202,13 @@ export function AddisLocationSearch({
       (pos) => {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
+        const subCity = findSubCityByCoordinates(lat, lon);
+
         const currentPlace: AddisPlace = {
           id: `gps_${Date.now()}`,
           name: query.trim() || "My Current GPS Location",
-          subcityOrStreet: "Detected GPS Location, Addis Ababa",
+          subcityOrStreet: `${subCity} Sub-City, Addis Ababa`,
+          subCity,
           lat,
           lon,
         };
@@ -200,11 +218,12 @@ export function AddisLocationSearch({
       (err) => {
         console.warn("GPS location detection failed:", err);
         setIsLocating(false);
-        // Fallback to Addis Ababa city center
+        const subCity = findSubCityByCoordinates(9.0192, 38.7525);
         handleSelect({
           id: "fallback_gps",
           name: query.trim() || "Addis Ababa Center",
           subcityOrStreet: "Addis Ababa, Ethiopia",
+          subCity,
           lat: 9.0192,
           lon: 38.7525,
         });
@@ -220,7 +239,6 @@ export function AddisLocationSearch({
 
   return (
     <div className="relative w-full max-w-md mx-auto" ref={containerRef}>
-      {/* Input Bar */}
       <div className="flex items-center gap-2 bg-slate-100/90 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-500 rounded-2xl px-3.5 py-2.5 transition-all border border-slate-200/80 shadow-xs">
         <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
         <input
@@ -246,10 +264,8 @@ export function AddisLocationSearch({
         )}
       </div>
 
-      {/* Suggestion Dropdown Sheet */}
       {isOpen && (
         <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50 divide-y divide-slate-100 animate-in fade-in duration-150">
-          {/* Current Location Trigger Item */}
           <button
             type="button"
             onMouseDown={handleGetCurrentLocation}
@@ -273,19 +289,20 @@ export function AddisLocationSearch({
             </div>
           </button>
 
-          {/* Custom Typed Name Fallback Option */}
           {query.trim().length >= 2 && (
             <button
               type="button"
-              onMouseDown={() =>
+              onMouseDown={() => {
+                const subCity = findSubCityByCoordinates(9.0192, 38.7525);
                 handleSelect({
                   id: `custom_${Date.now()}`,
                   name: query.trim(),
-                  subcityOrStreet: "Custom Landmark, Addis Ababa",
+                  subcityOrStreet: `${subCity} Sub-City, Addis Ababa`,
+                  subCity,
                   lat: 9.0192,
                   lon: 38.7525,
-                })
-              }
+                });
+              }}
               className="w-full px-4 py-2.5 flex items-center gap-3 text-left hover:bg-slate-50 transition-colors"
             >
               <div className="w-7 h-7 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">

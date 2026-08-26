@@ -15,6 +15,10 @@ import {
   AddisLocationSearch,
   type AddisPlace,
 } from "../components/AddisLocationSearch.js";
+import {
+  detectAddisSubCity,
+  reverseGeocodeAddis,
+} from "../utils/locationUtils.js";
 import { stripEmojis } from "../utils/sanitize.js";
 import {
   ADDIS_ABABA_SUBCITIES,
@@ -106,46 +110,53 @@ function CustomSearchSelect({
         setIsOpen(false);
       }
     }
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
-  const filteredOptions = options.filter((o) =>
-    o.label.toLowerCase().includes(search.toLowerCase()),
+  const filteredOptions = options.filter((option) =>
+    option.label.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const selectedOption = options.find((o) => o.value === value);
+  const selectedOption = options.find((option) => option.value === value);
 
   return (
-    <div className="relative space-y-1 w-full" ref={containerRef}>
+    <div className="relative w-full space-y-1" ref={containerRef}>
       <label className="block text-xs font-medium text-slate-700">
         {label}
       </label>
+
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full h-9 px-3 bg-slate-50 border text-xs font-medium text-slate-800 rounded-lg flex items-center justify-between transition-all ${
+        className={`flex h-9 w-full items-center justify-between rounded-lg border bg-slate-50 px-3 text-xs font-medium text-slate-800 transition-all ${
           error
             ? "border-red-400 bg-red-50/20"
             : isOpen
-              ? "border-emerald-500 ring-1 ring-emerald-500 bg-white"
+              ? "border-emerald-500 bg-white ring-1 ring-emerald-500"
               : "border-slate-200 hover:border-slate-300"
         }`}
       >
         <span className="truncate">
           {selectedOption ? selectedOption.label : placeholder}
         </span>
+
         <ChevronDown
-          className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${
+          className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform ${
             isOpen ? "rotate-180 text-emerald-600" : ""
           }`}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden text-xs animate-in fade-in duration-100">
-          <div className="p-1.5 border-b border-slate-100 flex items-center gap-1.5 bg-slate-50">
-            <Search className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1" />
+        <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white text-xs shadow-lg">
+          <div className="flex items-center gap-1.5 border-b border-slate-100 bg-slate-50 p-1.5">
+            <Search className="ml-1 h-3.5 w-3.5 shrink-0 text-slate-400" />
+
             <input
               type="text"
               value={search}
@@ -154,51 +165,56 @@ function CustomSearchSelect({
               autoFocus
               className="w-full bg-transparent text-xs font-normal text-slate-800 outline-none placeholder:text-slate-400"
             />
+
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch("")}
-                className="p-0.5 hover:bg-slate-200 rounded text-slate-400"
+                className="rounded p-0.5 text-slate-400 hover:bg-slate-200"
               >
-                <X className="w-3 h-3" />
+                <X className="h-3 w-3" />
               </button>
             )}
           </div>
-          <div className="max-h-40 overflow-y-auto py-1 divide-y divide-slate-50 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-slate-200">
+
+          <div className="max-h-40 overflow-y-auto py-1">
             {filteredOptions.length > 0 ? (
-              filteredOptions.map((opt) => {
-                const isSelected = opt.value === value;
+              filteredOptions.map((option) => {
+                const isSelected = option.value === value;
+
                 return (
                   <button
-                    key={opt.value}
+                    key={option.value}
                     type="button"
                     onClick={() => {
-                      onChange(opt.value);
+                      onChange(option.value);
                       setIsOpen(false);
                       setSearch("");
                     }}
-                    className={`w-full text-left px-3 py-2 text-xs font-medium flex items-center justify-between transition-colors ${
+                    className={`flex w-full items-center justify-between px-3 py-2 text-left text-xs font-medium transition-colors ${
                       isSelected
-                        ? "bg-emerald-50 text-emerald-800 font-semibold"
+                        ? "bg-emerald-50 font-semibold text-emerald-800"
                         : "text-slate-700 hover:bg-slate-50 hover:text-emerald-700"
                     }`}
                   >
-                    <span className="truncate">{opt.label}</span>
+                    <span className="truncate">{option.label}</span>
+
                     {isSelected && (
-                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 ml-1" />
+                      <Check className="ml-1 h-3.5 w-3.5 shrink-0 text-emerald-600" />
                     )}
                   </button>
                 );
               })
             ) : (
-              <div className="px-3 py-2 text-xs text-slate-400 text-center">
+              <div className="px-3 py-2 text-center text-xs text-slate-400">
                 No matching results
               </div>
             )}
           </div>
         </div>
       )}
-      {error && <p className="text-[10px] text-red-600 font-medium">{error}</p>}
+
+      {error && <p className="text-[10px] font-medium text-red-600">{error}</p>}
     </div>
   );
 }
@@ -232,7 +248,7 @@ export function PostPropertyPage() {
     defaultValues: {
       purpose: "FOR_SALE",
       category: "APARTMENT",
-      providerType: (user?.providerType as any) || "OWNER",
+      providerType: user?.providerType || "OWNER",
       region: "Addis Ababa",
       subCity: "Bole",
       areaName: "Bole Atlas",
@@ -274,41 +290,113 @@ export function PostPropertyPage() {
 
   const isLandCategory = selectedCategory?.includes("LAND");
 
-  const subCityOptions = ADDIS_ABABA_SUBCITIES.map((sc) => ({
-    value: sc,
-    label: sc,
+  const subCityOptions = ADDIS_ABABA_SUBCITIES.map((subCity) => ({
+    value: subCity,
+    label: subCity,
   }));
 
+  /**
+   * Location search selection
+   *
+   * Priority:
+   * 1. Use subCity directly from AddisPlace if available.
+   * 2. Otherwise detect it from the place name/address.
+   */
   const handleAddisPlaceSelect = (place: AddisPlace) => {
-    setValue("areaName", place.name);
+    setValue("areaName", stripEmojis(place.name));
     setValue("latitude", place.lat);
     setValue("longitude", place.lon);
+
+    // Prefer the sub-city returned by the location search.
+    const placeWithSubCity = place as AddisPlace & {
+      subCity?: string;
+    };
+
+    if (placeWithSubCity.subCity) {
+      setValue("subCity", placeWithSubCity.subCity);
+      return;
+    }
+
+    // Fallback: detect sub-city from the location information.
+    const locationText = [place.name, place.subcityOrStreet]
+      .filter(Boolean)
+      .join(" ");
+
+    const detectedSubCity = detectAddisSubCity(locationText);
+
+    if (detectedSubCity) {
+      setValue("subCity", detectedSubCity);
+    }
+  };
+
+  /**
+   * Map pin selection
+   *
+   * Coordinates are reverse-geocoded to determine:
+   * - Area / landmark
+   * - Sub-city
+   */
+  const handleMapLocationSelect = async (lat: number, lng: number) => {
+    setValue("latitude", lat);
+    setValue("longitude", lng);
+
+    try {
+      const geo = await reverseGeocodeAddis(lat, lng);
+
+      // Auto-populate area name from reverse geocoding.
+      if (
+        geo.name &&
+        (!selectedAreaName || selectedAreaName === "Bole Atlas")
+      ) {
+        setValue("areaName", stripEmojis(geo.name));
+      }
+
+      // Auto-populate sub-city from reverse geocoding.
+      if (geo.subCity) {
+        setValue("subCity", geo.subCity);
+      } else if (geo.name) {
+        // Final fallback: detect sub-city from returned place name.
+        const detectedSubCity = detectAddisSubCity(geo.name);
+
+        if (detectedSubCity) {
+          setValue("subCity", detectedSubCity);
+        }
+      }
+    } catch (error) {
+      console.error("Reverse geocoding failed:", error);
+    }
   };
 
   const handleAddHashtag = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+
     const cleanTag = stripEmojis(tagInput.replace(/#/g, "")).trim();
+
     if (!cleanTag) return;
 
     if (!selectedAmenities.includes(cleanTag)) {
       setValue("amenities", [...selectedAmenities, cleanTag]);
     }
+
     setTagInput("");
   };
 
   const removeHashtag = (tagToRemove: string) => {
     setValue(
       "amenities",
-      selectedAmenities.filter((a: string) => a !== tagToRemove),
+      selectedAmenities.filter((amenity: string) => amenity !== tagToRemove),
     );
   };
 
   const handleGenerateAiAd = async (promptToUse?: string) => {
     const textPrompt = stripEmojis(promptToUse || aiPrompt);
+
     if (!textPrompt || textPrompt.trim().length < 5) return;
 
     setIsAiGenerating(true);
     setSubmitError(null);
+    setAiGeneratedSuccess(false);
+
     try {
       const result = await generateAiAd(
         textPrompt,
@@ -319,23 +407,54 @@ export function PostPropertyPage() {
       setValue("titleAm", stripEmojis(result.titleAm));
       setValue("descriptionEn", stripEmojis(result.descriptionEn));
       setValue("descriptionAm", stripEmojis(result.descriptionAm));
+
       setValue("category", result.category);
       setValue("purpose", result.purpose);
       setValue("priceETB", result.priceETB);
       setValue("region", "Addis Ababa");
-      if (result.subCity) setValue("subCity", result.subCity);
-      if (result.areaName) setValue("areaName", stripEmojis(result.areaName));
-      if (result.bedrooms) setValue("bedrooms", result.bedrooms);
-      if (result.bathrooms) setValue("bathrooms", result.bathrooms);
-      if (result.areaSqMeters) setValue("areaSqMeters", result.areaSqMeters);
-      if (result.isFurnished !== undefined)
+
+      if (result.areaName) {
+        const areaName = stripEmojis(result.areaName);
+
+        setValue("areaName", areaName);
+
+        const detectedSubCity = detectAddisSubCity(areaName);
+
+        if (detectedSubCity) {
+          setValue("subCity", detectedSubCity);
+        }
+      }
+
+      if (result.subCity) {
+        setValue("subCity", result.subCity);
+      }
+
+      if (result.bedrooms) {
+        setValue("bedrooms", result.bedrooms);
+      }
+
+      if (result.bathrooms) {
+        setValue("bathrooms", result.bathrooms);
+      }
+
+      if (result.areaSqMeters) {
+        setValue("areaSqMeters", result.areaSqMeters);
+      }
+
+      if (result.isFurnished !== undefined) {
         setValue("isFurnished", result.isFurnished);
-      if (result.amenities) setValue("amenities", result.amenities);
+      }
+
+      if (result.amenities) {
+        setValue("amenities", result.amenities);
+      }
 
       setAiGeneratedSuccess(true);
-    } catch (err: any) {
+    } catch (error) {
+      console.error("AI generation failed:", error);
+
       setSubmitError(
-        "AI generation failed. Please review your prompt or enter details manually.",
+        "AI generation failed. Please review your prompt or enter the details manually.",
       );
     } finally {
       setIsAiGenerating(false);
@@ -343,21 +462,27 @@ export function PostPropertyPage() {
   };
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      const combinedFiles = [...selectedPhotos, ...newFiles].slice(0, 5);
-      setSelectedPhotos(combinedFiles);
+    if (!e.target.files) return;
 
-      const newPreviews = combinedFiles.map((file) =>
-        URL.createObjectURL(file),
-      );
-      setPhotoPreviews(newPreviews);
-    }
+    const newFiles = Array.from(e.target.files);
+
+    const combinedFiles = [...selectedPhotos, ...newFiles].slice(0, 5);
+
+    setSelectedPhotos(combinedFiles);
+
+    const newPreviews = combinedFiles.map((file) => URL.createObjectURL(file));
+
+    setPhotoPreviews(newPreviews);
+
+    // Allow selecting the same file again later.
+    e.target.value = "";
   };
 
   const removePhoto = (index: number) => {
     const updatedFiles = selectedPhotos.filter((_, i) => i !== index);
+
     const updatedPreviews = photoPreviews.filter((_, i) => i !== index);
+
     setSelectedPhotos(updatedFiles);
     setPhotoPreviews(updatedPreviews);
   };
@@ -365,26 +490,35 @@ export function PostPropertyPage() {
   const onFormSubmit = handleSubmit(async (data: any) => {
     setIsSubmitting(true);
     setSubmitError(null);
+
     try {
       const payload: CreatePropertyInput = {
         ...data,
+
         region: "Addis Ababa",
+
         titleEn: stripEmojis(data.titleEn),
         titleAm: stripEmojis(data.titleAm),
+
         descriptionEn: stripEmojis(data.descriptionEn),
         descriptionAm: stripEmojis(data.descriptionAm),
+
         areaName: stripEmojis(data.areaName || "Bole Atlas"),
+
         priceETB: Number(data.priceETB),
+
         bedrooms: isLandCategory
           ? undefined
           : data.bedrooms
             ? Number(data.bedrooms)
             : undefined,
+
         bathrooms: isLandCategory
           ? undefined
           : data.bathrooms
             ? Number(data.bathrooms)
             : undefined,
+
         areaSqMeters: data.areaSqMeters ? Number(data.areaSqMeters) : undefined,
       };
 
@@ -392,17 +526,21 @@ export function PostPropertyPage() {
 
       if (selectedPhotos.length > 0) {
         const formData = new FormData();
+
         selectedPhotos.forEach((file) => {
           formData.append("photos", file);
         });
+
         await uploadPropertyImages(property.id, formData);
       }
 
       navigate("/profile");
-    } catch (err: any) {
+    } catch (error: any) {
+      console.error("Create property failed:", error);
+
       setSubmitError(
-        err.response?.data?.message ||
-          "Failed to create property listing draft",
+        error?.response?.data?.message ||
+          "Failed to create property listing draft.",
       );
     } finally {
       setIsSubmitting(false);
@@ -410,35 +548,49 @@ export function PostPropertyPage() {
   });
 
   const livePreviewProperty = useMemo(() => {
-    const mockImages = photoPreviews.map((url, idx) => ({
-      id: `preview_${idx}`,
+    const mockImages = photoPreviews.map((url, index) => ({
+      id: `preview_${index}`,
       url,
-      isMain: idx === 0,
+      isMain: index === 0,
     }));
 
     return {
       id: "live_preview",
+
       titleEn: selectedTitleEn || "Property Title in English",
+
       titleAm: selectedTitleAm || "የቤት ርዕስ በአማርኛ",
+
       descriptionEn: selectedDescEn || "Description will appear here...",
+
       descriptionAm: selectedDescAm || "ዝርዝር መረጃ እዚህ ይወጣል...",
+
       category: selectedCategory,
       purpose: selectedPurpose,
       priceETB: selectedPriceETB || 0,
+
       areaSqMeters: selectedAreaSqMeters,
       bedrooms: selectedBedrooms,
       bathrooms: selectedBathrooms,
+
       isFurnished: selectedIsFurnished,
       condition: selectedCondition,
+
       amenities: selectedAmenities,
+
       region: "Addis Ababa",
       subCity: selectedSubCity,
       areaName: selectedAreaName || "Bole Atlas",
+
       latitude: selectedLatitude,
       longitude: selectedLongitude,
+
       providerType: selectedProviderType,
+
       viewsCount: 0,
+
       images: mockImages,
+
       provider: {
         firstName: user?.firstName || "Valued",
         lastName: user?.lastName || "User",
@@ -470,46 +622,51 @@ export function PostPropertyPage() {
   ]);
 
   return (
-    <div className="w-full max-w-md mx-auto p-3.5 pb-24 space-y-4 text-slate-800 overflow-x-hidden">
-      {/* Header Banner */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+    <div className="mx-auto w-full max-w-md space-y-4 overflow-x-hidden p-3.5 pb-24 text-slate-800">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-            <PlusCircle className="w-4 h-4" />
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+            <PlusCircle className="h-4 w-4" />
           </div>
+
           <h2 className="text-xs font-semibold text-slate-800">
             {t("navPost")}
           </h2>
         </div>
-        <span className="text-[11px] font-medium px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100/60">
+
+        <span className="rounded-full border border-emerald-100/60 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700">
           {FLAT_PUBLICATION_FEE} ETB Fee
         </span>
       </div>
 
+      {/* Error */}
       {submitError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-2.5 rounded-lg text-xs flex items-center gap-2 font-normal">
-          <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
+        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs font-normal text-red-700">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-red-500" />
           <span>{submitError}</span>
         </div>
       )}
 
-      {/* LIGHTWEIGHT AI COPYWRITER CONTAINER */}
-      <div className="p-3.5 bg-slate-900 text-white rounded-2xl shadow-xs space-y-3">
+      {/* AI */}
+      <div className="space-y-3 rounded-2xl bg-slate-900 p-3.5 text-white shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <Sparkles className="h-4 w-4 text-emerald-400" />
+
             <span className="text-xs font-bold tracking-tight">
               Smart AI Ad Copywriter
             </span>
           </div>
-          <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full border border-emerald-400/30">
+
+          <span className="rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
             Addis Ababa
           </span>
         </div>
 
-        <p className="text-[11px] text-slate-300 leading-relaxed font-normal">
-          Type property requirements naturally. The AI auto-detects furnished
-          state and auto-populates structured bilingual fields.
+        <p className="text-[11px] font-normal leading-relaxed text-slate-300">
+          Type property requirements naturally. The AI auto-detects sub-city,
+          furnished state, and auto-populates structured bilingual fields.
         </p>
 
         <div className="space-y-2">
@@ -518,21 +675,21 @@ export function PostPropertyPage() {
             value={aiPrompt}
             onChange={(e) => setAiPrompt(stripEmojis(e.target.value))}
             placeholder="E.g., 3 bedroom furnished apartment in Bole Atlas for rent 80k ETB with generator & water tank..."
-            className="w-full text-xs p-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-400 font-normal resize-none"
+            className="w-full resize-none rounded-xl border border-white/20 bg-white/10 p-2.5 text-xs font-normal text-white outline-none placeholder:text-slate-400 focus:border-emerald-400"
           />
 
-          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            {EXAMPLE_PROMPTS.map((ex, i) => (
+          <div className="scrollbar-none flex gap-1.5 overflow-x-auto pb-1">
+            {EXAMPLE_PROMPTS.map((example, index) => (
               <button
-                key={i}
+                key={index}
                 type="button"
                 onClick={() => {
-                  setAiPrompt(ex);
-                  handleGenerateAiAd(ex);
+                  setAiPrompt(example);
+                  handleGenerateAiAd(example);
                 }}
-                className="text-[10px] font-medium px-2.5 py-1 bg-white/10 hover:bg-white/20 text-emerald-200 border border-white/10 rounded-lg whitespace-nowrap shrink-0 transition-colors"
+                className="shrink-0 whitespace-nowrap rounded-lg border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-medium text-emerald-200 transition-colors hover:bg-white/20"
               >
-                {ex.slice(0, 35)}...
+                {example.slice(0, 35)}...
               </button>
             ))}
           </div>
@@ -541,47 +698,59 @@ export function PostPropertyPage() {
             type="button"
             onClick={() => handleGenerateAiAd()}
             disabled={isAiGenerating || aiPrompt.trim().length < 5}
-            className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50 transition-colors shadow-xs"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2 text-xs font-bold text-slate-950 shadow-sm transition-colors hover:bg-emerald-600 disabled:opacity-50"
           >
             {isAiGenerating ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 <span>Generating Ad...</span>
               </>
             ) : (
               <>
-                <Wand2 className="w-3.5 h-3.5" />
+                <Wand2 className="h-3.5 w-3.5" />
                 <span>Auto-Generate Ad Fields</span>
               </>
             )}
           </button>
+
+          {aiGeneratedSuccess && (
+            <div className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-300">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              AI generated successfully. Review the fields below.
+            </div>
+          )}
         </div>
       </div>
 
       <form onSubmit={onFormSubmit} className="space-y-3.5">
-        {/* Purpose Chips */}
+        {/* Purpose */}
         <div className="space-y-1.5">
           <label className="block text-xs font-medium text-slate-700">
             Listing Purpose *
           </label>
-          <div className="flex gap-1.5 overflow-x-auto pb-1 whitespace-nowrap scrollbar-none">
+
+          <div className="scrollbar-none flex gap-1.5 overflow-x-auto pb-1">
             {PURPOSE_OPTIONS.map((item) => {
               const Icon = item.icon;
               const isSelected = selectedPurpose === item.id;
+
               return (
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setValue("purpose", item.id as any)}
-                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-1.5 shrink-0 ${
+                  onClick={() => setValue("purpose", item.id)}
+                  className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
                     isSelected
-                      ? "border-emerald-600 bg-emerald-600 text-white shadow-xs"
+                      ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
                       : "border-slate-200 bg-slate-50/80 text-slate-600 hover:bg-slate-100"
                   }`}
                 >
                   <Icon
-                    className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-slate-400"}`}
+                    className={`h-3.5 w-3.5 ${
+                      isSelected ? "text-white" : "text-slate-400"
+                    }`}
                   />
+
                   <span>{item.label}</span>
                 </button>
               );
@@ -594,44 +763,47 @@ export function PostPropertyPage() {
           label="Property Category *"
           options={CATEGORY_OPTIONS}
           value={selectedCategory}
-          onChange={(val) => setValue("category", val)}
+          onChange={(value) => setValue("category", value)}
           placeholder="Select Category..."
           error={errors.category?.message as string}
         />
 
-        {/* Provider Type */}
+        {/* Provider */}
         <div className="space-y-1.5">
           <label className="block text-xs font-medium text-slate-700">
             Your Listing Provider Type *
           </label>
-          <div className="flex gap-1.5 overflow-x-auto pb-1 whitespace-nowrap scrollbar-none">
+
+          <div className="scrollbar-none flex gap-1.5 overflow-x-auto pb-1">
             {PROVIDER_OPTIONS.map((item) => {
               const isSelected = selectedProviderType === item.id;
+
               return (
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setValue("providerType", item.id as any)}
-                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all shrink-0 ${
+                  onClick={() => setValue("providerType", item.id)}
+                  className={`shrink-0 whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
                     isSelected
-                      ? "border-emerald-600 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600 font-semibold"
+                      ? "border-emerald-600 bg-emerald-50 font-semibold text-emerald-900 ring-1 ring-emerald-600"
                       : "border-slate-200 bg-slate-50/80 text-slate-600 hover:bg-slate-100"
                   }`}
                 >
-                  <span>{item.label}</span>
+                  {item.label}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* MULTI-PHOTO UPLOAD SECTION */}
-        <div className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl space-y-2">
+        {/* Photos */}
+        <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
           <div className="flex items-center justify-between">
             <label className="block text-xs font-medium text-slate-700">
               Property Photos ({selectedPhotos.length}/5)
             </label>
-            <span className="text-[10px] text-slate-400 font-normal">
+
+            <span className="text-[10px] font-normal text-slate-400">
               JPEG, PNG, WebP
             </span>
           </div>
@@ -646,25 +818,27 @@ export function PostPropertyPage() {
           />
 
           <div className="grid grid-cols-5 gap-1.5 pt-1">
-            {photoPreviews.map((url, idx) => (
+            {photoPreviews.map((url, index) => (
               <div
                 key={url}
-                className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group"
+                className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100"
               >
                 <img
                   src={url}
-                  alt={`Preview ${idx + 1}`}
-                  className="w-full h-full object-cover"
+                  alt={`Preview ${index + 1}`}
+                  className="h-full w-full object-cover"
                 />
+
                 <button
                   type="button"
-                  onClick={() => removePhoto(idx)}
-                  className="absolute top-0.5 right-0.75 bg-black/60 text-white p-0.5 rounded-full hover:bg-black/80"
+                  onClick={() => removePhoto(index)}
+                  className="absolute right-0.5 top-0.5 rounded-full bg-black/60 p-0.5 text-white hover:bg-black/80"
                 >
-                  <X className="w-2.5 h-2.5" />
+                  <X className="h-2.5 w-2.5" />
                 </button>
-                {idx === 0 && (
-                  <span className="absolute bottom-0 inset-x-0 bg-emerald-600/90 text-white text-[8px] font-bold text-center py-0.25">
+
+                {index === 0 && (
+                  <span className="absolute inset-x-0 bottom-0 bg-emerald-600/90 py-0.5 text-center text-[8px] font-bold text-white">
                     Main
                   </span>
                 )}
@@ -675,112 +849,129 @@ export function PostPropertyPage() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="aspect-square rounded-lg border-2 border-dashed border-slate-200 bg-white flex flex-col items-center justify-center text-slate-400 hover:border-emerald-500 hover:text-emerald-600 transition-colors"
+                className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-white text-slate-400 transition-colors hover:border-emerald-500 hover:text-emerald-600"
               >
-                <Camera className="w-4 h-4" />
-                <span className="text-[9px] font-medium mt-0.5">Add</span>
+                <Camera className="h-4 w-4" />
+                <span className="mt-0.5 text-[9px] font-medium">Add</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Titles & Pricing Card */}
-        <div className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl space-y-3">
+        {/* Titles & Price */}
+        <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="mb-1 block text-xs font-medium text-slate-700">
               Property Title (English) *
             </label>
+
             <input
               type="text"
               {...register("titleEn")}
               onChange={(e) => setValue("titleEn", stripEmojis(e.target.value))}
               placeholder="E.g., Modern 3 Bedroom Apartment in Bole Atlas"
-              className="w-full h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-normal focus:outline-none focus:border-emerald-500"
+              className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-normal outline-none focus:border-emerald-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="mb-1 block text-xs font-medium text-slate-700">
               Property Title (Amharic) *
             </label>
+
             <input
               type="text"
               {...register("titleAm")}
               onChange={(e) => setValue("titleAm", stripEmojis(e.target.value))}
               placeholder="ምሳሌ፦ በቦሌ አትላስ ዘመናዊ የ 3 መኝታ አፓርትመንት"
-              className="w-full h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-normal focus:outline-none focus:border-emerald-500"
+              className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-normal outline-none focus:border-emerald-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="mb-1 block text-xs font-medium text-slate-700">
               Price (ETB) *
             </label>
+
             <input
               type="number"
-              {...register("priceETB", { valueAsNumber: true })}
-              className="w-full h-9 px-3 text-xs bg-white border border-slate-200 rounded-lg font-semibold text-emerald-700 focus:outline-none focus:border-emerald-500"
+              {...register("priceETB", {
+                valueAsNumber: true,
+              })}
+              className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-emerald-700 outline-none focus:border-emerald-500"
             />
           </div>
         </div>
 
-        {/* Specs & Furnished Toggle */}
+        {/* Specifications */}
         {!isLandCategory && (
-          <div className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl space-y-3">
+          <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
             <div className="flex gap-2">
               <div className="flex-1">
-                <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                <label className="mb-1 block text-[11px] font-medium text-slate-600">
                   Bedrooms
                 </label>
+
                 <input
                   type="number"
-                  {...register("bedrooms", { valueAsNumber: true })}
-                  className="w-full h-8 px-2 text-xs bg-white border border-slate-200 rounded-lg font-semibold text-center focus:border-emerald-500 outline-none"
+                  {...register("bedrooms", {
+                    valueAsNumber: true,
+                  })}
+                  className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-xs font-semibold outline-none focus:border-emerald-500"
                 />
               </div>
+
               <div className="flex-1">
-                <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                <label className="mb-1 block text-[11px] font-medium text-slate-600">
                   Bathrooms
                 </label>
+
                 <input
                   type="number"
-                  {...register("bathrooms", { valueAsNumber: true })}
-                  className="w-full h-8 px-2 text-xs bg-white border border-slate-200 rounded-lg font-semibold text-center focus:border-emerald-500 outline-none"
+                  {...register("bathrooms", {
+                    valueAsNumber: true,
+                  })}
+                  className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-xs font-semibold outline-none focus:border-emerald-500"
                 />
               </div>
+
               <div className="flex-1">
-                <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                <label className="mb-1 block text-[11px] font-medium text-slate-600">
                   Area (m²)
                 </label>
+
                 <input
                   type="number"
-                  {...register("areaSqMeters", { valueAsNumber: true })}
-                  className="w-full h-8 px-2 text-xs bg-white border border-slate-200 rounded-lg font-semibold text-center focus:border-emerald-500 outline-none"
+                  {...register("areaSqMeters", {
+                    valueAsNumber: true,
+                  })}
+                  className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-xs font-semibold outline-none focus:border-emerald-500"
                 />
               </div>
             </div>
 
-            {/* Is Furnished Toggle */}
-            <div className="flex items-center justify-between px-3 py-2 bg-white rounded-lg border border-slate-200">
+            {/* Furnished */}
+            <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2">
               <span className="text-xs font-medium text-slate-700">
                 Is Furnished?
               </span>
+
               <button
                 type="button"
                 onClick={() => setValue("isFurnished", !selectedIsFurnished)}
-                className={`w-9 h-5 rounded-full transition-colors relative ${
+                className={`relative h-5 w-9 rounded-full transition-colors ${
                   selectedIsFurnished ? "bg-emerald-600" : "bg-slate-300"
                 }`}
               >
                 <span
-                  className={`w-3.5 h-3.5 rounded-full bg-white absolute top-0.75 transition-transform ${
-                    selectedIsFurnished ? "right-0.75" : "left-0.75"
+                  className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white transition-transform ${
+                    selectedIsFurnished ? "right-0.5" : "left-0.5"
                   }`}
                 />
               </button>
             </div>
 
-            {/* TIKTOK-STYLE HASHTAG AMENITIES INPUT */}
+            {/* Amenities */}
             <div className="space-y-1.5">
               <label className="block text-xs font-medium text-slate-700">
                 Amenities & Features (#Hashtags)
@@ -788,7 +979,8 @@ export function PostPropertyPage() {
 
               <div className="flex gap-1.5">
                 <div className="relative flex-1">
-                  <Hash className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <Hash className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+
                   <input
                     type="text"
                     value={tagInput}
@@ -800,13 +992,14 @@ export function PostPropertyPage() {
                       }
                     }}
                     placeholder="Type hashtag e.g. Generator, CCTV..."
-                    className="w-full h-8 pl-8 pr-2 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:border-emerald-500 font-medium"
+                    className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2 text-xs font-medium outline-none focus:border-emerald-500"
                   />
                 </div>
+
                 <button
                   type="button"
                   onClick={() => handleAddHashtag()}
-                  className="px-3 h-8 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-lg text-xs transition-colors"
+                  className="h-8 rounded-lg bg-slate-200 px-3 text-xs font-bold text-slate-800 transition-colors hover:bg-slate-300"
                 >
                   + Add
                 </button>
@@ -816,15 +1009,16 @@ export function PostPropertyPage() {
                 {selectedAmenities.map((tag: string) => (
                   <span
                     key={tag}
-                    className="text-xs font-bold px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg flex items-center gap-1"
+                    className="flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-800"
                   >
                     <span>#{tag}</span>
+
                     <button
                       type="button"
                       onClick={() => removeHashtag(tag)}
                       className="text-emerald-600 hover:text-emerald-900"
                     >
-                      <X className="w-3 h-3" />
+                      <X className="h-3 w-3" />
                     </button>
                   </span>
                 ))}
@@ -834,11 +1028,12 @@ export function PostPropertyPage() {
         )}
 
         {/* Descriptions */}
-        <div className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl space-y-3">
+        <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="mb-1 block text-xs font-medium text-slate-700">
               Description (English) *
             </label>
+
             <textarea
               rows={2}
               {...register("descriptionEn")}
@@ -846,14 +1041,15 @@ export function PostPropertyPage() {
                 setValue("descriptionEn", stripEmojis(e.target.value))
               }
               placeholder="Landmark, condition, utilities details..."
-              className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg font-normal focus:outline-none focus:border-emerald-500"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-normal outline-none focus:border-emerald-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="mb-1 block text-xs font-medium text-slate-700">
               Description (Amharic) *
             </label>
+
             <textarea
               rows={2}
               {...register("descriptionAm")}
@@ -861,17 +1057,18 @@ export function PostPropertyPage() {
                 setValue("descriptionAm", stripEmojis(e.target.value))
               }
               placeholder="ስለ ንብረቱ ዝርዝር መረጃ ያስገቡ..."
-              className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg font-normal focus:outline-none focus:border-emerald-500"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-normal outline-none focus:border-emerald-500"
             />
           </div>
         </div>
 
-        {/* Location Section & Photon Auto-Suggest + Map Picker */}
-        <div className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl space-y-3">
+        {/* Location */}
+        <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
           <div className="space-y-1">
             <label className="block text-xs font-medium text-slate-700">
               Property Location / Landmark Search (Addis Ababa) *
             </label>
+
             <AddisLocationSearch
               value={selectedAreaName}
               onSelect={handleAddisPlaceSelect}
@@ -882,34 +1079,31 @@ export function PostPropertyPage() {
             label="Sub-city (Addis Ababa)"
             options={subCityOptions}
             value={selectedSubCity}
-            onChange={(val) => setValue("subCity", val)}
+            onChange={(value) => setValue("subCity", value)}
             placeholder="Select Sub-city..."
           />
 
-          {/* Interactive Map Location Picker */}
           <LocationPickerMap
             initialLat={selectedLatitude || 9.0192}
             initialLng={selectedLongitude || 38.7525}
-            onSelectLocation={(lat, lng) => {
-              setValue("latitude", lat);
-              setValue("longitude", lng);
-            }}
+            onSelectLocation={handleMapLocationSelect}
           />
         </div>
 
-        {/* LIVE SOCIAL FEED CARD PREVIEW */}
-        <div className="pt-2 space-y-2">
+        {/* Live Preview */}
+        <div className="space-y-2 pt-2">
           <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
-              <Eye className="w-4 h-4 text-emerald-600" />
+            <span className="flex items-center gap-1.5 text-xs font-extrabold text-slate-900">
+              <Eye className="h-4 w-4 text-emerald-600" />
               <span>Live Post Feed Preview</span>
             </span>
-            <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
               Real-time Preview
             </span>
           </div>
 
-          <div className="border-2 border-emerald-500/30 rounded-2xl overflow-hidden bg-white shadow-xs">
+          <div className="overflow-hidden rounded-2xl border-2 border-emerald-500/30 bg-white shadow-sm">
             <SocialFeedPost
               property={livePreviewProperty}
               onOpenImageIndex={() => {}}
@@ -917,36 +1111,38 @@ export function PostPropertyPage() {
           </div>
         </div>
 
-        {/* Summary Box */}
-        <div className="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200/70 space-y-1">
+        {/* Summary */}
+        <div className="space-y-1 rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-emerald-950">
               Publication Fee
             </span>
+
             <span className="text-xs font-bold text-emerald-700">
               {FLAT_PUBLICATION_FEE} ETB
             </span>
           </div>
-          <p className="text-[10px] text-emerald-800 leading-normal font-normal">
+
+          <p className="text-[10px] font-normal leading-normal text-emerald-800">
             Submitting creates a draft in your portfolio with your uploaded
             photos attached.
           </p>
         </div>
 
-        {/* Action Button */}
+        {/* Submit */}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-medium rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50 transition-colors shadow-xs"
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-xs font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50"
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
               <span>Uploading & Creating Draft...</span>
             </>
           ) : (
             <>
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 className="h-4 w-4" />
               <span>
                 Approve & Create Draft ({selectedPhotos.length} photos)
               </span>
