@@ -5,9 +5,6 @@ import { CreatePropertyInput } from "@awtarprop/shared";
 import { Prisma } from "@prisma/client";
 
 export class PropertyService {
-  /**
-   * Calculates publication fee in ETB based on category and provider type.
-   */
   public calculateListingFee(category: string, providerType: string): number {
     let baseFee = 100;
 
@@ -28,9 +25,6 @@ export class PropertyService {
     return baseFee;
   }
 
-  /**
-   * Creates a new property listing entry.
-   */
   public async createListing(userId: string, input: CreatePropertyInput) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundError("User account not found");
@@ -75,7 +69,7 @@ export class PropertyService {
   }
 
   /**
-   * Searches published listings and fetches associated Cloudinary images.
+   * Deep universal search across purpose, category, providerType, locations, titles, descriptions, and amenities.
    */
   public async searchListings(query: {
     category?: string;
@@ -89,7 +83,7 @@ export class PropertyService {
     offset?: number;
   }) {
     const where: Prisma.PropertyListingWhereInput = {
-      publicationStatus: "PUBLISHED", // Only display active published properties
+      publicationStatus: "PUBLISHED",
     };
 
     if (query.category) where.category = query.category as any;
@@ -103,13 +97,75 @@ export class PropertyService {
       if (query.maxPrice) where.priceETB.lte = query.maxPrice;
     }
 
-    if (query.search) {
-      where.OR = [
-        { titleEn: { contains: query.search, mode: "insensitive" } },
-        { titleAm: { contains: query.search, mode: "insensitive" } },
-        { areaName: { contains: query.search, mode: "insensitive" } },
-        { descriptionEn: { contains: query.search, mode: "insensitive" } },
+    if (query.search && query.search.trim().length > 0) {
+      const term = query.search.trim();
+      const termUpper = term.toUpperCase().replace(/\s+/g, "_");
+
+      // Check enum matches
+      const matchingPurposes = [
+        "FOR_SALE",
+        "FOR_RENT",
+        "LOOKING_TO_BUY",
+        "LOOKING_TO_RENT",
+      ].filter(
+        (p) =>
+          p.includes(termUpper) ||
+          p.replace(/_/g, " ").includes(term.toUpperCase()),
+      );
+
+      const matchingCategories = [
+        "APARTMENT",
+        "CONDOMINIUM",
+        "RESIDENTIAL_HOUSE",
+        "VILLA",
+        "STUDIO",
+        "COMMERCIAL_SPACE",
+        "OFFICE",
+        "SHOP",
+        "WAREHOUSE",
+        "BUILDING",
+        "HOTEL",
+        "RESIDENTIAL_LAND",
+        "COMMERCIAL_LAND",
+        "AGRICULTURAL_LAND",
+      ].filter(
+        (c) =>
+          c.includes(termUpper) ||
+          c.replace(/_/g, " ").includes(term.toUpperCase()),
+      );
+
+      const matchingProviders = [
+        "OWNER",
+        "BROKER",
+        "AGENT",
+        "AGENCY",
+        "DEVELOPER",
+      ].filter((pr) => pr.includes(termUpper));
+
+      const orConditions: Prisma.PropertyListingWhereInput[] = [
+        { titleEn: { contains: term, mode: "insensitive" } },
+        { titleAm: { contains: term, mode: "insensitive" } },
+        { descriptionEn: { contains: term, mode: "insensitive" } },
+        { descriptionAm: { contains: term, mode: "insensitive" } },
+        { areaName: { contains: term, mode: "insensitive" } },
+        { region: { contains: term, mode: "insensitive" } },
+        { subCity: { contains: term, mode: "insensitive" } },
+        { woreda: { contains: term, mode: "insensitive" } },
+        { kebele: { contains: term, mode: "insensitive" } },
+        { amenities: { hasSome: [term] } },
       ];
+
+      if (matchingPurposes.length > 0) {
+        orConditions.push({ purpose: { in: matchingPurposes as any } });
+      }
+      if (matchingCategories.length > 0) {
+        orConditions.push({ category: { in: matchingCategories as any } });
+      }
+      if (matchingProviders.length > 0) {
+        orConditions.push({ providerType: { in: matchingProviders as any } });
+      }
+
+      where.OR = orConditions;
     }
 
     return propertyRepository.findMany(

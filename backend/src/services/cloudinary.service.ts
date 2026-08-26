@@ -16,22 +16,20 @@ export interface UploadResult {
 
 export class CloudinaryService {
   /**
-   * Processes raw upload buffer: auto-rotates EXIF, resizes, watermarks, converts to WebP,
-   * and uploads to Cloudinary.
+   * Processes raw upload buffer: auto-rotates EXIF, resizes, overlays centered semi-transparent watermark,
+   * converts to WebP, and uploads to Cloudinary.
    */
   public async uploadPropertyImage(
     fileBuffer: Buffer,
     propertyId: string,
   ): Promise<UploadResult> {
     try {
-      // 1. Read metadata & auto-orient EXIF camera orientation
       const sharpInstance = sharp(fileBuffer).rotate();
       const metadata = await sharpInstance.metadata();
 
       const origWidth = metadata.width || 1200;
       const origHeight = metadata.height || 900;
 
-      // 2. Calculate boundary resize (Max 1600px on longest edge)
       const maxDimension = 1600;
       let targetWidth = origWidth;
       let targetHeight = origHeight;
@@ -46,10 +44,9 @@ export class CloudinaryService {
         }
       }
 
-      // 3. Generate dynamic SVG watermark matched to target image dimensions
+      // Generate large, light semi-transparent watermark
       const watermarkBuffer = generateWatermarkSvg(targetWidth, targetHeight);
 
-      // 4. Process Sharp pipeline: Resize -> Composite Watermark -> Compress to WebP
       const processedBuffer = await sharpInstance
         .resize(targetWidth, targetHeight, {
           fit: "inside",
@@ -58,19 +55,16 @@ export class CloudinaryService {
         .composite([
           {
             input: watermarkBuffer,
-            gravity: "southeast", // Positioned at bottom-right corner
-            top: undefined,
-            left: undefined,
+            gravity: "center", // Positioned directly at the center of the photo
           },
         ])
         .webp({
-          quality: 80, // Industry standard visual losslessness threshold
-          effort: 4, // Sweet spot for CPU speed vs compression ratio
+          quality: 80,
+          effort: 4,
           smartSubsample: true,
         })
         .toBuffer();
 
-      // 5. Stream processed buffer to Cloudinary
       return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
@@ -98,9 +92,6 @@ export class CloudinaryService {
     }
   }
 
-  /**
-   * Deletes an image asset from Cloudinary storage.
-   */
   public async deleteImage(publicId: string): Promise<void> {
     try {
       await cloudinary.uploader.destroy(publicId);
