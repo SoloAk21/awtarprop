@@ -25,8 +25,8 @@ export interface SocialFeedPostProps {
   onOpenDetails?: (property: any) => void;
 }
 
-function formatTimeAgo(dateString?: string): string {
-  if (!dateString) return "Just now";
+function formatTimeAgo(dateString?: string, isAmharic = false): string {
+  if (!dateString) return isAmharic ? "አሁን" : "Just now";
   const now = new Date();
   const past = new Date(dateString);
   const diffMs = now.getTime() - past.getTime();
@@ -34,51 +34,59 @@ function formatTimeAgo(dateString?: string): string {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return past.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (diffMins < 1) return isAmharic ? "አሁን" : "Just now";
+  if (diffMins < 60)
+    return isAmharic ? `ከ ${diffMins} ደቂቃ በፊት` : `${diffMins}m ago`;
+  if (diffHours < 24)
+    return isAmharic ? `ከ ${diffHours} ሰዓት በፊት` : `${diffHours}h ago`;
+  if (diffDays < 7)
+    return isAmharic ? `ከ ${diffDays} ቀን በፊት` : `${diffDays}d ago`;
+  return past.toLocaleDateString(isAmharic ? "am-ET" : "en-US", {
+    month: "short",
+    day: "numeric",
+  });
 }
 
 export const SocialFeedPost = React.memo(function SocialFeedPost({
   property,
   onOpenImageIndex,
 }: SocialFeedPostProps) {
-  const { currentLanguage } = useTranslation();
+  const {
+    t,
+    currentLanguage,
+    translateCategory,
+    translatePurpose,
+    translateProviderType,
+  } = useTranslation();
+  const isAmharic = currentLanguage === "AM";
+
   const favoriteIds = useFavoritesStore((state) => state.favoriteIds);
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
 
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const title = currentLanguage === "AM" ? property.titleAm : property.titleEn;
-  const description =
-    currentLanguage === "AM" ? property.descriptionAm : property.descriptionEn;
+  // Pure Localized Content Selection
+  const title = isAmharic
+    ? property.titleAm || property.titleEn
+    : property.titleEn || property.titleAm;
+  const description = isAmharic
+    ? property.descriptionAm || property.descriptionEn
+    : property.descriptionEn || property.descriptionAm;
   const favorited = useMemo(
     () => favoriteIds.includes(property.id),
     [favoriteIds, property.id],
   );
 
-  const formatCurrency = useCallback((amount: number) => {
-    return new Intl.NumberFormat("en-ET", {
-      style: "currency",
-      currency: "ETB",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  }, []);
-
-  const getPurposeText = (p: string) => {
-    switch (p) {
-      case "FOR_SALE":
-        return "For Sale";
-      case "FOR_RENT":
-        return "For Rent";
-      case "LOOKING_TO_BUY":
-        return "Buy Request";
-      default:
-        return "Rent Request";
-    }
-  };
+  const formatCurrency = useCallback(
+    (amount: number) => {
+      return new Intl.NumberFormat(isAmharic ? "am-ET" : "en-ET", {
+        style: "currency",
+        currency: "ETB",
+        maximumFractionDigits: 0,
+      }).format(amount);
+    },
+    [isAmharic],
+  );
 
   const images = property.images || [];
   const amenities: string[] = property.amenities || [];
@@ -97,7 +105,7 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
     (e: React.MouseEvent) => {
       e.stopPropagation();
       const shareText = encodeURIComponent(
-        `Check out this property on AwtarProp: ${title} - ${formatCurrency(Number(property.priceETB))}`,
+        `${title} - ${formatCurrency(Number(property.priceETB))}`,
       );
       const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${shareText}`;
 
@@ -110,25 +118,11 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
     [property.priceETB, title, formatCurrency],
   );
 
-  const handleOpenMapLocation = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const mapUrl =
-      property.latitude && property.longitude
-        ? `https://www.google.com/maps/search/?api=1&query=${property.latitude},${property.longitude}`
-        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property.areaName}, ${property.subCity || ""}, ${property.region}`)}`;
-
-    if (window.Telegram?.WebApp?.openLink) {
-      window.Telegram.WebApp.openLink(mapUrl);
-    } else {
-      window.open(mapUrl, "_blank");
-    }
-  };
-
   const telegramUsername = property.provider?.username;
   const contactPhone = property.provider?.phoneNumber;
   const timeAgoText = useMemo(
-    () => formatTimeAgo(property.createdAt),
-    [property.createdAt],
+    () => formatTimeAgo(property.createdAt, isAmharic),
+    [property.createdAt, isAmharic],
   );
 
   return (
@@ -146,9 +140,9 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
                 {property.provider?.firstName}{" "}
                 {property.provider?.lastName || ""}
               </h4>
-              <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-              <span className="text-[9px] font-extrabold bg-slate-100 text-slate-700 px-1.5 py-0.25 rounded uppercase">
-                {property.providerType}
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span className="text-[9px] font-extrabold bg-slate-100 text-slate-700 px-1.5 py-0.25 rounded">
+                {translateProviderType(property.providerType)}
               </span>
             </div>
             <p className="text-[10px] text-slate-400 font-medium leading-none mt-1">
@@ -166,7 +160,7 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
         </button>
       </div>
 
-      {/* 2. MULTI-PHOTO COLLAGE */}
+      {/* 2. UNCLUTTERED MULTI-PHOTO COLLAGE */}
       <MultiImageGrid
         images={images}
         onImageClick={(index) => onOpenImageIndex(property, index)}
@@ -182,9 +176,9 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               className="p-2 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors"
-              title="Chat"
+              title={t("chat")}
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-4 h-4 stroke-[2]" />
             </a>
           )}
 
@@ -193,9 +187,9 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
               href={`tel:${contactPhone}`}
               onClick={(e) => e.stopPropagation()}
               className="p-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
-              title="Call"
+              title={t("call")}
             >
-              <Phone className="w-4 h-4" />
+              <Phone className="w-4 h-4 stroke-[2]" />
             </a>
           )}
 
@@ -203,42 +197,40 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
             type="button"
             onClick={handleShare}
             className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
-            title="Share"
+            title={t("share")}
           >
-            <Share2 className="w-4 h-4" />
+            <Share2 className="w-4 h-4 stroke-[2]" />
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 px-2 py-1 bg-slate-50 rounded-lg">
-            <Eye className="w-3.5 h-3.5 text-emerald-600" />
-            <span>{property.viewsCount || 0}</span>
+        <div className="flex items-center gap-3 text-slate-500 text-xs font-medium">
+          <div className="flex items-center gap-1">
+            <Eye className="w-4 h-4 stroke-[2] text-slate-500" />
+            <span className="text-[11px] font-medium">
+              {property.viewsCount || 0} {t("views")}
+            </span>
           </div>
 
           <button
             type="button"
             onClick={() => toggleFavorite(property.id)}
-            className={`p-2 rounded-xl transition-colors ${
-              favorited
-                ? "bg-emerald-50 text-emerald-600"
-                : "text-slate-500 hover:bg-slate-100"
-            }`}
-            title="Bookmark"
+            className="text-slate-700 hover:text-emerald-600 transition-colors"
+            title={t("save")}
           >
             <Bookmark
-              className={`w-4 h-4 ${favorited ? "fill-emerald-600 text-emerald-600" : ""}`}
+              className={`w-4 h-4 stroke-[2] ${favorited ? "fill-emerald-600 text-emerald-600" : "text-slate-700"}`}
             />
           </button>
         </div>
       </div>
 
-      {/* 4. CAPTION SECTION */}
+      {/* 4. LOCALIZED CAPTION SECTION */}
       <div className="px-4 pt-2.5 space-y-2.5">
         <h3 className="font-extrabold text-slate-900 text-sm leading-snug">
           {title}
         </h3>
 
-        {/* Description Text */}
+        {/* FIRST: Description Text */}
         <div className="text-xs text-slate-600 leading-relaxed font-normal whitespace-pre-line">
           <span>{displayText}</span>
           {shouldTruncate && (
@@ -247,75 +239,80 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
               onClick={() => setIsExpanded(!isExpanded)}
               className="ml-1 text-emerald-600 font-bold hover:underline"
             >
-              {isExpanded ? "Less" : "... More"}
+              {isExpanded ? t("less") : t("more")}
             </button>
           )}
         </div>
 
-        {/* Vertical Specifications & Clickable Map Location Link */}
-        <div className="pt-2 border-t border-slate-100 space-y-1.5 text-xs font-semibold text-slate-700">
-          <div className="flex items-center gap-2 text-emerald-600 font-black">
-            <Tag className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+        {/* SECOND: Vertical Specifications & Location List */}
+        <div className="pt-2 border-t border-slate-100 space-y-1.5 text-xs font-medium text-slate-700">
+          <div className="flex items-center gap-2 text-emerald-700 font-extrabold">
+            <Tag className="w-3.5 h-3.5 stroke-[2] text-emerald-600 shrink-0" />
             <span>
-              {getPurposeText(property.purpose)} ·{" "}
-              {property.category?.replace(/_/g, " ")} ·{" "}
+              {translatePurpose(property.purpose)} ·{" "}
+              {translateCategory(property.category)} ·{" "}
               {formatCurrency(Number(property.priceETB))}
             </span>
           </div>
 
-          {/* Clickable Map Location Link */}
-          <button
-            type="button"
-            onClick={handleOpenMapLocation}
-            className="flex items-center gap-2 text-slate-700 font-semibold hover:text-emerald-700 text-left transition-colors"
-          >
-            <MapPin className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-            <span className="underline decoration-dotted underline-offset-2">
+          <div className="flex items-center gap-2 text-slate-600 font-medium">
+            <MapPin className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+            <span>
               {property.areaName},{" "}
               {property.subCity ? `${property.subCity}, ` : ""}
               {property.region}
             </span>
-          </button>
+          </div>
 
           {property.bedrooms !== undefined && property.bedrooms !== null && (
             <div className="flex items-center gap-2 text-slate-700">
-              <Bed className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <span>{property.bedrooms} Beds</span>
+              <Bed className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+              <span>
+                {property.bedrooms} {t("beds")}
+              </span>
             </div>
           )}
 
           {property.bathrooms !== undefined && property.bathrooms !== null && (
             <div className="flex items-center gap-2 text-slate-700">
-              <Bath className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <span>{property.bathrooms} Baths</span>
+              <Bath className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+              <span>
+                {property.bathrooms} {t("baths")}
+              </span>
             </div>
           )}
 
           {property.areaSqMeters !== undefined &&
             property.areaSqMeters !== null && (
               <div className="flex items-center gap-2 text-slate-700">
-                <Maximize className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span>{property.areaSqMeters} m²</span>
+                <Maximize className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+                <span>
+                  {property.areaSqMeters} {t("sqm")}
+                </span>
               </div>
             )}
 
           {property.isFurnished && (
             <div className="flex items-center gap-2 text-slate-700">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-              <span>Furnished</span>
+              <Sparkles className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+              <span>{t("furnished")}</span>
             </div>
           )}
 
           {property.condition && (
             <div className="flex items-center gap-2 text-slate-700">
-              <Award className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-              <span>Condition: {property.condition}</span>
+              <Award className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+              <span>
+                {t("condition")}: {property.condition}
+              </span>
             </div>
           )}
 
           {amenityHashtags && (
-            <div className="pt-2 border-t border-slate-100/80 text-[11px] font-bold text-emerald-700 flex items-center gap-1.5 flex-wrap">
-              <span className="text-slate-400 font-normal">Features:</span>
+            <div className="pt-2 border-t border-slate-100 text-[11px] font-semibold text-emerald-700 flex items-center gap-1.5 flex-wrap">
+              <span className="text-slate-400 font-normal">
+                {t("features")}:
+              </span>
               <span>{amenityHashtags}</span>
             </div>
           )}
