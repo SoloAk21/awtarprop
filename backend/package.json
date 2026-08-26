@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@awtarprop/shared": "file:../shared",
+    "@google/generative-ai": "^0.24.1",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "@prisma/config": "^7.9.1",

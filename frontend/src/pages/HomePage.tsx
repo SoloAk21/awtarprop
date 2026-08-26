@@ -1,12 +1,11 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "../hooks/useTranslation.js";
-import { usePropertiesQuery } from "../hooks/useProperties.js";
-import { SocialFeedPost } from "../components/SocialFeedPost.js";
-import { PropertyDetailModal } from "../components/PropertyDetailModal.js";
-import { LightBoxModal } from "../components/LightBoxModal.js";
-import { PropertyMap } from "../components/PropertyMap.js";
-import { ETHIOPIAN_REGIONS, ADDIS_ABABA_SUBCITIES } from "@awtarprop/shared";
+import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../hooks/useTranslation.js';
+import { usePropertiesQuery } from '../hooks/useProperties.js';
+import { SocialFeedPost } from '../components/SocialFeedPost.js';
+import { LightBoxModal } from '../components/LightBoxModal.js';
+import { PropertyMap } from '../components/PropertyMap.js';
+import { ETHIOPIAN_REGIONS, ADDIS_ABABA_SUBCITIES } from '@awtarprop/shared';
 import {
   Sparkles,
   Loader2,
@@ -19,37 +18,37 @@ import {
   X,
   Check,
   RotateCcw,
-} from "lucide-react";
+} from 'lucide-react';
 
 const CATEGORY_STORY_PILLS = [
-  { id: "", label: "All Feed" },
-  { id: "APARTMENT", label: "Apartments" },
-  { id: "CONDOMINIUM", label: "Condos" },
-  { id: "RESIDENTIAL_HOUSE", label: "Villas" },
-  { id: "COMMERCIAL_SPACE", label: "Commercial" },
-  { id: "RESIDENTIAL_LAND", label: "Land" },
+  { id: '', label: 'All Feed' },
+  { id: 'APARTMENT', label: 'Apartments' },
+  { id: 'CONDOMINIUM', label: 'Condos' },
+  { id: 'RESIDENTIAL_HOUSE', label: 'Villas' },
+  { id: 'COMMERCIAL_SPACE', label: 'Commercial' },
+  { id: 'RESIDENTIAL_LAND', label: 'Land' },
 ];
 
 const PURPOSE_TABS = [
-  { value: "", label: "All Purposes" },
-  { value: "FOR_SALE", label: "For Sale" },
-  { value: "FOR_RENT", label: "For Rent" },
-  { value: "LOOKING_TO_BUY", label: "Buy Requests" },
-  { value: "LOOKING_TO_RENT", label: "Rent Requests" },
+  { value: '', label: 'All Purposes' },
+  { value: 'FOR_SALE', label: 'For Sale' },
+  { value: 'FOR_RENT', label: 'For Rent' },
+  { value: 'LOOKING_TO_BUY', label: 'Buy Requests' },
+  { value: 'LOOKING_TO_RENT', label: 'Rent Requests' },
 ];
 
 const CATEGORY_OPTIONS = [
-  { value: "", label: "All Categories" },
-  { value: "APARTMENT", label: "Apartment" },
-  { value: "CONDOMINIUM", label: "Condominium" },
-  { value: "RESIDENTIAL_HOUSE", label: "House / Villa" },
-  { value: "STUDIO", label: "Studio" },
-  { value: "COMMERCIAL_SPACE", label: "Commercial Space" },
-  { value: "OFFICE", label: "Office" },
-  { value: "BUILDING", label: "Full Building" },
-  { value: "RESIDENTIAL_LAND", label: "Residential Land" },
-  { value: "COMMERCIAL_LAND", label: "Commercial Land" },
-  { value: "AGRICULTURAL_LAND", label: "Agricultural Land" },
+  { value: '', label: 'All Categories' },
+  { value: 'APARTMENT', label: 'Apartment' },
+  { value: 'CONDOMINIUM', label: 'Condominium' },
+  { value: 'RESIDENTIAL_HOUSE', label: 'House / Villa' },
+  { value: 'STUDIO', label: 'Studio' },
+  { value: 'COMMERCIAL_SPACE', label: 'Commercial Space' },
+  { value: 'OFFICE', label: 'Office' },
+  { value: 'BUILDING', label: 'Full Building' },
+  { value: 'RESIDENTIAL_LAND', label: 'Residential Land' },
+  { value: 'COMMERCIAL_LAND', label: 'Commercial Land' },
+  { value: 'AGRICULTURAL_LAND', label: 'Agricultural Land' },
 ];
 
 interface FilterSelectProps {
@@ -65,28 +64,23 @@ function FilterSearchSelect({
   options,
   value,
   onChange,
-  placeholder = "Select...",
+  placeholder = 'Select...',
 }: FilterSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [search, setSearch] = useState('');
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const filtered = options.filter((o) =>
-    o.label.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()));
   const selected = options.find((o) => o.value === value);
 
   return (
@@ -99,16 +93,14 @@ function FilterSearchSelect({
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full h-9 px-3 bg-slate-50 border text-xs font-bold text-slate-800 rounded-xl flex items-center justify-between transition-all ${
           isOpen
-            ? "border-emerald-500 ring-1 ring-emerald-500 bg-white"
-            : "border-slate-200 hover:border-slate-300"
+            ? 'border-emerald-500 ring-1 ring-emerald-500 bg-white'
+            : 'border-slate-200 hover:border-slate-300'
         }`}
       >
-        <span className="truncate">
-          {selected ? selected.label : placeholder}
-        </span>
+        <span className="truncate">{selected ? selected.label : placeholder}</span>
         <ChevronDown
           className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${
-            isOpen ? "rotate-180 text-emerald-600" : ""
+            isOpen ? 'rotate-180 text-emerald-600' : ''
           }`}
         />
       </button>
@@ -128,7 +120,7 @@ function FilterSearchSelect({
             {search && (
               <button
                 type="button"
-                onClick={() => setSearch("")}
+                onClick={() => setSearch('')}
                 className="p-0.5 hover:bg-slate-200 rounded text-slate-400"
               >
                 <X className="w-3 h-3" />
@@ -145,18 +137,16 @@ function FilterSearchSelect({
                   onClick={() => {
                     onChange(opt.value);
                     setIsOpen(false);
-                    setSearch("");
+                    setSearch('');
                   }}
                   className={`w-full text-left px-3 py-2 text-xs font-bold flex items-center justify-between transition-colors ${
                     isSelected
-                      ? "bg-emerald-50 text-emerald-800"
-                      : "text-slate-700 hover:bg-slate-50"
+                      ? 'bg-emerald-50 text-emerald-800'
+                      : 'text-slate-700 hover:bg-slate-50'
                   }`}
                 >
                   <span className="truncate">{opt.label}</span>
-                  {isSelected && (
-                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 ml-1" />
-                  )}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 ml-1" />}
                 </button>
               );
             })}
@@ -172,16 +162,16 @@ export function HomePage() {
   const navigate = useNavigate();
 
   // Filter States
-  const [searchInput, setSearchInput] = useState("");
-  const [activeSearch, setActiveSearch] = useState("");
-  const [purpose, setPurpose] = useState("");
-  const [category, setCategory] = useState("");
-  const [region, setRegion] = useState("");
-  const [subCity, setSubCity] = useState("");
+  const [searchInput, setSearchInput] = useState('');
+  const [activeSearch, setActiveSearch] = useState('');
+  const [purpose, setPurpose] = useState('');
+  const [category, setCategory] = useState('');
+  const [region, setRegion] = useState('');
+  const [subCity, setSubCity] = useState('');
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
-  const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
-  // TanStack Query Feed
+  // TanStack Query Feed Caching
   const { data, isLoading } = usePropertiesQuery({
     search: activeSearch || undefined,
     purpose: purpose || undefined,
@@ -193,8 +183,7 @@ export function HomePage() {
 
   const properties: any[] = data?.properties || [];
 
-  // Modal States
-  const [selectedProperty, setSelectedProperty] = useState<any | null>(null);
+  // Lightbox State
   const [lightboxState, setLightboxState] = useState<{
     isOpen: boolean;
     images: Array<{ id: string; url: string }>;
@@ -204,22 +193,20 @@ export function HomePage() {
     isOpen: false,
     images: [],
     initialIndex: 0,
-    title: "",
+    title: '',
   });
 
   const regionOptions = [
-    { value: "", label: "All Regions" },
+    { value: '', label: 'All Regions' },
     ...ETHIOPIAN_REGIONS.map((r) => ({ value: r, label: r })),
   ];
 
   const subCityOptions = [
-    { value: "", label: "All Sub-cities" },
+    { value: '', label: 'All Sub-cities' },
     ...ADDIS_ABABA_SUBCITIES.map((sc) => ({ value: sc, label: sc })),
   ];
 
-  const activeFilterCount = [purpose, category, region, subCity].filter(
-    Boolean,
-  ).length;
+  const activeFilterCount = [purpose, category, region, subCity].filter(Boolean).length;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -227,12 +214,12 @@ export function HomePage() {
   };
 
   const handleResetFilters = () => {
-    setSearchInput("");
-    setActiveSearch("");
-    setPurpose("");
-    setCategory("");
-    setRegion("");
-    setSubCity("");
+    setSearchInput('');
+    setActiveSearch('');
+    setPurpose('');
+    setCategory('');
+    setRegion('');
+    setSubCity('');
   };
 
   const handleOpenImageIndex = useCallback((property: any, index: number) => {
@@ -242,10 +229,6 @@ export function HomePage() {
       initialIndex: index,
       title: property.titleEn,
     });
-  }, []);
-
-  const handleOpenDetails = useCallback((property: any) => {
-    setSelectedProperty(property);
   }, []);
 
   return (
@@ -269,7 +252,7 @@ export function HomePage() {
 
           <div className="pt-1">
             <button
-              onClick={() => navigate("/post")}
+              onClick={() => navigate('/post')}
               className="w-full py-2 bg-white text-emerald-900 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs hover:bg-emerald-50 transition-colors"
             >
               <PlusCircle className="w-3.5 h-3.5 text-emerald-700" />
@@ -281,10 +264,7 @@ export function HomePage() {
 
       {/* Unified Search Bar & Controls */}
       <div className="px-3.5 space-y-2.5">
-        <form
-          onSubmit={handleSearchSubmit}
-          className="flex items-center gap-1.5"
-        >
+        <form onSubmit={handleSearchSubmit} className="flex items-center gap-1.5">
           <div className="relative flex-1">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -298,8 +278,8 @@ export function HomePage() {
               <button
                 type="button"
                 onClick={() => {
-                  setSearchInput("");
-                  setActiveSearch("");
+                  setSearchInput('');
+                  setActiveSearch('');
                 }}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
@@ -310,14 +290,10 @@ export function HomePage() {
 
           <button
             type="button"
-            onClick={() => setViewMode(viewMode === "list" ? "map" : "list")}
+            onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
             className="w-9 h-9 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl flex items-center justify-center shrink-0 hover:bg-emerald-100 transition-colors"
           >
-            {viewMode === "list" ? (
-              <Map className="w-4 h-4" />
-            ) : (
-              <LayoutGrid className="w-4 h-4" />
-            )}
+            {viewMode === 'list' ? <Map className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
           </button>
 
           <button
@@ -325,8 +301,8 @@ export function HomePage() {
             onClick={() => setShowFilterDrawer(!showFilterDrawer)}
             className={`w-9 h-9 border rounded-xl flex items-center justify-center shrink-0 relative transition-colors ${
               showFilterDrawer || activeFilterCount > 0
-                ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
-                : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
@@ -348,8 +324,8 @@ export function HomePage() {
                 onClick={() => setCategory(pill.id)}
                 className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shrink-0 ${
                   isSelected
-                    ? "border-emerald-600 bg-emerald-600 text-white shadow-xs"
-                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    ? 'border-emerald-600 bg-emerald-600 text-white shadow-xs'
+                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                 }`}
               >
                 {pill.label}
@@ -362,9 +338,7 @@ export function HomePage() {
         {showFilterDrawer && (
           <div className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-2xl space-y-3 animate-in fade-in duration-150">
             <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
-              <span className="text-xs font-extrabold text-slate-900">
-                Filter Properties
-              </span>
+              <span className="text-xs font-extrabold text-slate-900">Filter Properties</span>
               <button
                 type="button"
                 onClick={handleResetFilters}
@@ -388,8 +362,8 @@ export function HomePage() {
                       onClick={() => setPurpose(p.value)}
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors shrink-0 ${
                         purpose === p.value
-                          ? "bg-emerald-600 text-white border-emerald-600"
-                          : "bg-white text-slate-600 border-slate-200"
+                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          : 'bg-white text-slate-600 border-slate-200'
                       }`}
                     >
                       {p.label}
@@ -434,21 +408,17 @@ export function HomePage() {
           <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
           <span className="text-xs font-medium">Loading property feed...</span>
         </div>
-      ) : viewMode === "map" ? (
+      ) : viewMode === 'map' ? (
         <div className="px-3.5 pt-2">
           <PropertyMap
             properties={properties}
-            onSelectProperty={(p) => setSelectedProperty(p)}
+            onSelectProperty={(p) => handleOpenImageIndex(p, 0)}
           />
         </div>
       ) : properties.length === 0 ? (
         <div className="p-8 mx-3.5 mt-2 bg-slate-50/50 rounded-2xl text-center border border-slate-100 space-y-1">
-          <p className="text-xs font-bold text-slate-700">
-            No Active Listings Found
-          </p>
-          <p className="text-[11px] text-slate-400">
-            Try broadening your search or resetting active filters.
-          </p>
+          <p className="text-xs font-bold text-slate-700">No Active Listings Found</p>
+          <p className="text-[11px] text-slate-400">Try broadening your search or resetting active filters.</p>
         </div>
       ) : (
         <div className="divide-y divide-slate-100 pt-2">
@@ -456,8 +426,8 @@ export function HomePage() {
             <SocialFeedPost
               key={p.id}
               property={p}
-              onOpenDetails={handleOpenDetails}
-              onOpenImageIndex={handleOpenImageIndex}
+              onOpenDetails={() => {}}
+              onOpenImageIndex={(property, index) => handleOpenImageIndex(property, index)}
             />
           ))}
         </div>
@@ -471,14 +441,6 @@ export function HomePage() {
         title={lightboxState.title}
         onClose={() => setLightboxState((prev) => ({ ...prev, isOpen: false }))}
       />
-
-      {/* Property Detail Modal */}
-      {selectedProperty && (
-        <PropertyDetailModal
-          property={selectedProperty}
-          onClose={() => setSelectedProperty(null)}
-        />
-      )}
     </div>
   );
 }

@@ -1,3 +1,7 @@
+import dns from "dns";
+// Force Node.js native fetch() to prefer IPv4 DNS resolution for Google APIs
+dns.setDefaultResultOrder("ipv4first");
+
 import express, { Express, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";

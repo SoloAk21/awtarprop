@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Home, Heart, PlusCircle, User } from "lucide-react";
+import { Home, Bookmark, PlusCircle, User } from "lucide-react";
 import { useTranslation } from "../hooks/useTranslation.js";
 import { useFavoritesStore } from "../store/useFavoritesStore.js";
 
@@ -13,7 +13,7 @@ export function BottomNav() {
     { to: "/", icon: Home, label: t("navHome"), badge: 0 },
     {
       to: "/favorites",
-      icon: Heart,
+      icon: Bookmark,
       label: t("navFavorites"),
       badge: favoritesCount,
     },
@@ -33,7 +33,7 @@ export function BottomNav() {
               className={({ isActive }) =>
                 `flex flex-col items-center gap-0.5 text-xs font-medium px-3 py-1 rounded-xl relative transition-colors ${
                   isActive
-                    ? "text-emerald-600 bg-emerald-50"
+                    ? "text-emerald-600 bg-emerald-50 font-bold"
                     : "text-slate-500 hover:text-slate-900"
                 }`
               }
@@ -41,7 +41,7 @@ export function BottomNav() {
               <div className="relative">
                 <Icon className="w-5 h-5" />
                 {item.badge > 0 && (
-                  <span className="absolute -top-1 -right-2.5 px-1.5 py-0.25 bg-red-500 text-white rounded-full text-[9px] font-black border border-white">
+                  <span className="absolute -top-1 -right-2.5 px-1.5 py-0.25 bg-emerald-600 text-white rounded-full text-[9px] font-black border border-white">
                     {item.badge}
                   </span>
                 )}
