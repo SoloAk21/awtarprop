@@ -44,7 +44,6 @@ export function ProfilePage() {
       .catch(() => setMyListings([]));
   }, []);
 
-  // Compute portfolio view metrics
   const totalListings = myListings.length;
   const totalViews = myListings.reduce(
     (sum, item) => sum + (item.viewsCount || 0),
@@ -61,166 +60,176 @@ export function ProfilePage() {
     import.meta.env.VITE_TELEGRAM_CHANNEL_USERNAME || "awtarprop";
 
   return (
-    <div className="w-full max-w-md mx-auto p-3.5 pb-24 space-y-4 text-slate-800 relative">
-      {/* 1. USER IDENTITY HEADER */}
-      <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+    <div className="w-full max-w-md mx-auto p-4 pb-28 space-y-5 text-slate-800 relative">
+      {/* 1. FLAT USER HEADER */}
+      <div className="flex items-center justify-between py-1">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl flex items-center justify-center font-black text-base shadow-xs shrink-0">
+          <div className="w-12 h-12 bg-slate-100 text-slate-800 rounded-full flex items-center justify-center font-bold text-base shrink-0 border border-slate-200/60">
             {user?.firstName?.charAt(0) || "U"}
           </div>
-          <div className="space-y-0.5 min-w-0">
+          <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <h3 className="font-extrabold text-slate-900 text-sm truncate">
+              <h3 className="font-semibold text-slate-900 text-sm truncate">
                 {user
                   ? `${user.firstName} ${user.lastName || ""}`
                   : "AwtarProp User"}
               </h3>
               {user?.isPhoneVerified && (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 stroke-[2] text-emerald-600 shrink-0" />
               )}
             </div>
-            <p className="text-[11px] text-slate-400 font-bold truncate">
+            <p className="text-xs text-slate-400 font-medium truncate mt-0.5">
               @{user?.username || "telegram_user"}
             </p>
           </div>
         </div>
 
         <button
+          type="button"
           onClick={() => setShowRoleModal(true)}
-          className="text-[10px] font-black px-2.5 py-1 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200/80 shrink-0 hover:bg-emerald-100 transition-colors"
+          className="text-xs font-semibold px-3 py-1 bg-slate-100 text-slate-700 rounded-full hover:bg-slate-200/80 transition-colors shrink-0"
         >
           {user?.providerType || "OWNER"}
         </button>
       </div>
 
-      {/* 2. PORTFOLIO METRICS SUMMARY BAR */}
-      <div className="grid grid-cols-3 gap-2 text-center text-xs">
-        <div className="p-3 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
-          <Building2 className="w-4 h-4 text-emerald-600 mx-auto mb-1 stroke-[2]" />
-          <span className="block font-black text-slate-900 text-sm">
+      {/* 2. COMPACT UNBOXED METRICS BAR */}
+      <div className="py-2.5 border-y border-slate-100 grid grid-cols-3 text-center text-xs">
+        <div>
+          <span className="block font-semibold text-slate-900 text-sm">
             {totalListings}
           </span>
-          <span className="text-[10px] font-bold text-slate-400">Listings</span>
+          <span className="text-[11px] font-medium text-slate-400">
+            Listings
+          </span>
         </div>
-
-        <div className="p-3 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
-          <Eye className="w-4 h-4 text-emerald-600 mx-auto mb-1 stroke-[2]" />
-          <span className="block font-black text-slate-900 text-sm">
+        <div className="border-x border-slate-100">
+          <span className="block font-semibold text-slate-900 text-sm">
             {totalViews}
           </span>
-          <span className="text-[10px] font-bold text-slate-400">
+          <span className="text-[11px] font-medium text-slate-400">
             Total Views
           </span>
         </div>
-
-        <div className="p-3 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
-          <Bookmark className="w-4 h-4 text-emerald-600 mx-auto mb-1 stroke-[2]" />
-          <span className="block font-black text-slate-900 text-sm">
+        <div>
+          <span className="block font-semibold text-slate-900 text-sm">
             {totalSaved}
           </span>
-          <span className="text-[10px] font-bold text-slate-400">Saved</span>
+          <span className="text-[11px] font-medium text-slate-400">Saved</span>
         </div>
       </div>
 
-      {/* 3. SETTINGS & PREFERENCES GROUP */}
-      <div className="p-3 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-3 text-xs font-semibold">
-        {/* Provider Role */}
-        <div
-          onClick={() => setShowRoleModal(true)}
-          className="flex items-center justify-between py-1 cursor-pointer hover:bg-slate-50/80 p-1.5 rounded-xl transition-colors"
-        >
-          <div className="flex items-center gap-2 text-slate-700">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Listing Provider Role</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="text-slate-900 font-extrabold">
-              {user?.providerType || "OWNER"}
-            </span>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
-          </div>
-        </div>
+      {/* 3. INSET GROUPED SETTINGS LIST (TELEGRAM / APPLE STYLE) */}
+      <div className="space-y-1">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 px-1 block mb-1">
+          Account Settings
+        </span>
 
-        {/* Language Switch */}
-        <div className="border-t border-slate-100 pt-2.5 flex items-center justify-between px-1.5">
-          <div className="flex items-center gap-2 text-slate-700">
-            <Globe className="w-4 h-4 text-emerald-600" />
-            <span>{t("languageSwitch")}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() =>
-              updateLanguage(currentLanguage === "EN" ? "AM" : "EN")
-            }
-            className="font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-xl hover:bg-emerald-100 transition-colors"
+        <div className="divide-y divide-slate-100 bg-white rounded-2xl border border-slate-200/60 overflow-hidden text-xs font-medium">
+          {/* Role */}
+          <div
+            onClick={() => setShowRoleModal(true)}
+            className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-slate-50 transition-colors"
           >
-            {currentLanguage === "EN" ? "English" : "አማርኛ"}
-          </button>
-        </div>
-
-        {/* Contact Phone */}
-        {user?.phoneNumber && (
-          <div className="border-t border-slate-100 pt-2.5 flex items-center justify-between px-1.5">
-            <div className="flex items-center gap-2 text-slate-700">
-              <Phone className="w-4 h-4 text-emerald-600" />
-              <span>Verified Contact Phone</span>
+            <div className="flex items-center gap-2.5 text-slate-700">
+              <ShieldCheck className="w-4 h-4 stroke-[2] text-emerald-600 shrink-0" />
+              <span>Listing Provider Role</span>
             </div>
-            <span className="font-extrabold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-xl">
-              {user.phoneNumber}
-            </span>
+            <div className="flex items-center gap-1 text-slate-400">
+              <span className="text-slate-900 font-semibold">
+                {user?.providerType || "OWNER"}
+              </span>
+              <ChevronRight className="w-4 h-4 stroke-[2]" />
+            </div>
           </div>
-        )}
+
+          {/* Language Switch */}
+          <div className="flex items-center justify-between p-3.5">
+            <div className="flex items-center gap-2.5 text-slate-700">
+              <Globe className="w-4 h-4 stroke-[2] text-emerald-600 shrink-0" />
+              <span>{t("languageSwitch")}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                updateLanguage(currentLanguage === "EN" ? "AM" : "EN")
+              }
+              className="font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 hover:bg-emerald-100 transition-colors"
+            >
+              {currentLanguage === "EN" ? "English" : "አማርኛ"}
+            </button>
+          </div>
+
+          {/* Verified Phone */}
+          {user?.phoneNumber && (
+            <div className="flex items-center justify-between p-3.5">
+              <div className="flex items-center gap-2.5 text-slate-700">
+                <Phone className="w-4 h-4 stroke-[2] text-emerald-600 shrink-0" />
+                <span>Verified Phone</span>
+              </div>
+              <span className="font-semibold text-slate-800 text-slate-600">
+                {user.phoneNumber}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* 4. OFFICIAL COMMUNITY & SUPPORT SHORTCUTS */}
-      <div className="p-3 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-2 text-xs font-bold">
-        <a
-          href={`https://t.me/${channelUsername.replace("@", "")}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-between p-2 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <Send className="w-4 h-4 text-emerald-600" />
-            <span>Official Telegram Channel</span>
-          </div>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </a>
+      {/* 4. COMMUNITY & SUPPORT GROUP */}
+      <div className="space-y-1">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 px-1 block mb-1">
+          Support & Community
+        </span>
 
-        <a
-          href={`https://t.me/${channelUsername.replace("@", "")}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-between p-2 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100"
-        >
-          <div className="flex items-center gap-2">
-            <HelpCircle className="w-4 h-4 text-emerald-600" />
-            <span>Support & Assistance</span>
-          </div>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </a>
+        <div className="divide-y divide-slate-100 bg-white rounded-2xl border border-slate-200/60 overflow-hidden text-xs font-medium">
+          <a
+            href={`https://t.me/${channelUsername.replace("@", "")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between p-3.5 text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            <div className="flex items-center gap-2.5">
+              <Send className="w-4 h-4 stroke-[2] text-emerald-600 shrink-0" />
+              <span>Official Telegram Channel</span>
+            </div>
+            <ChevronRight className="w-4 h-4 stroke-[2] text-slate-400" />
+          </a>
+
+          <a
+            href={`https://t.me/${channelUsername.replace("@", "")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between p-3.5 text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            <div className="flex items-center gap-2.5">
+              <HelpCircle className="w-4 h-4 stroke-[2] text-emerald-600 shrink-0" />
+              <span>Support & Assistance</span>
+            </div>
+            <ChevronRight className="w-4 h-4 stroke-[2] text-slate-400" />
+          </a>
+        </div>
       </div>
 
-      {/* 5. PORTFOLIO MANAGEMENT SECTION */}
+      {/* 5. PORTFOLIO SECTION */}
       <MyListingsSection />
 
-      {/* 6. LOG OUT CTA */}
+      {/* 6. LOG OUT CTA BUTTON */}
       <button
         type="button"
         onClick={() => setShowLogoutConfirm(true)}
-        className="w-full h-10 bg-red-50 text-red-600 font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-red-100/80 active:bg-red-100 transition-colors border border-red-100"
+        className="w-full h-10 text-red-600 font-semibold rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-red-50 transition-colors"
       >
-        <LogOut className="w-3.5 h-3.5" />
+        <LogOut className="w-4 h-4 stroke-[2]" />
         <span>Log Out Session</span>
       </button>
 
       {/* PROVIDER ROLE SELECTION MODAL */}
       {showRoleModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-3 animate-in slide-in-from-bottom duration-200">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-extrabold text-slate-900 text-sm">
-                Select Listing Provider Role
+              <h3 className="font-semibold text-slate-900 text-sm">
+                Select Provider Role
               </h3>
               <button
                 onClick={() => setShowRoleModal(false)}
@@ -230,22 +239,22 @@ export function ProfilePage() {
               </button>
             </div>
 
-            <div className="space-y-1.5 pt-1">
+            <div className="space-y-1 pt-1">
               {PROVIDER_ROLES.map((role) => {
                 const isSelected = (user?.providerType || "OWNER") === role.id;
                 return (
                   <button
                     key={role.id}
                     onClick={() => handleRoleSelect(role.id)}
-                    className={`w-full p-3 rounded-xl text-xs font-bold flex items-center justify-between transition-colors ${
+                    className={`w-full p-3 rounded-xl text-xs font-medium flex items-center justify-between transition-colors ${
                       isSelected
-                        ? "bg-emerald-50 text-emerald-900 border border-emerald-200"
-                        : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+                        ? "bg-emerald-50 text-emerald-900 font-semibold"
+                        : "text-slate-700 hover:bg-slate-50"
                     }`}
                   >
                     <span>{role.label}</span>
                     {isSelected && (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <CheckCircle2 className="w-4 h-4 stroke-[2] text-emerald-600" />
                     )}
                   </button>
                 );
@@ -257,11 +266,11 @@ export function ProfilePage() {
 
       {/* LOGOUT CONFIRMATION MODAL */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 animate-in slide-in-from-bottom duration-200">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-600" />
+                <AlertTriangle className="w-5 h-5 stroke-[2] text-red-600" />
                 <h3 className="font-semibold text-slate-900 text-sm">
                   Log Out Session?
                 </h3>
