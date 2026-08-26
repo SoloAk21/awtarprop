@@ -32,3 +32,9 @@ export const useFavoritesStore = create<FavoritesStore>()(
     },
   ),
 );
+
+export const useIsFavorite = (propertyId: string) =>
+  useFavoritesStore((state) => state.favoriteIds.includes(propertyId));
+
+export const useToggleFavorite = () =>
+  useFavoritesStore((state) => state.toggleFavorite);

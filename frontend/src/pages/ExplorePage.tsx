@@ -360,22 +360,18 @@ export function ExplorePage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {properties.map((p) => (
+          {properties.map((p: any) => (
             <div
               key={p.id}
               onClick={() => setSelectedProperty(p)}
               className="cursor-pointer"
             >
-              {/* FIX: Explicitly pass the full property and images */}
-              <PropertyCard
-                property={p}
-                images={p.images || []}
-                from="ExplorePage"
-              />
+              <PropertyCard property={p} from="ExplorePage" />
             </div>
           ))}
         </div>
       )}
+
       {/* Property Detail Modal */}
       {selectedProperty && (
         <PropertyDetailModal

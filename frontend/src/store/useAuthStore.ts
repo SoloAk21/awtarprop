@@ -1,9 +1,9 @@
 import { create } from "zustand";
 import { apiClient } from "../api/client.js";
 import type {
-  PreferredLanguage,
-  ProviderType,
   UserRole,
+  ProviderType,
+  PreferredLanguage,
 } from "@awtarprop/shared";
 
 export interface UserState {
@@ -46,7 +46,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       let initData = window.Telegram?.WebApp?.initData || "";
 
-      // Local development mock fallback when opening outside Telegram
       if (!initData && import.meta.env.DEV) {
         initData =
           "user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22Abebe%22%2C%22last_name%22%3A%22Bikila%22%2C%22username%22%3A%22abebe_b%22%7D&auth_date=1700000000&hash=dev_mock_hash";
@@ -95,3 +94,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     set({ user: null, token: null, isAuthenticated: false });
   },
 }));
+
+// Atomic Selector Hooks to Prevent Unnecessary Re-renders
+export const useAuthUser = () => useAuthStore((state) => state.user);
+export const useIsAuthenticated = () =>
+  useAuthStore((state) => state.isAuthenticated);
+export const useAuthLoading = () => useAuthStore((state) => state.isLoading);

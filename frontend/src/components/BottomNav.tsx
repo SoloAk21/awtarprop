@@ -1,15 +1,24 @@
-import { NavLink } from 'react-router-dom';
-import { Home, Search, PlusCircle, User } from 'lucide-react';
-import { useTranslation } from '../hooks/useTranslation.js';
+import React from "react";
+import { NavLink } from "react-router-dom";
+import { Home, Heart, PlusCircle, User } from "lucide-react";
+import { useTranslation } from "../hooks/useTranslation.js";
+import { useFavoritesStore } from "../store/useFavoritesStore.js";
 
 export function BottomNav() {
   const { t } = useTranslation();
+  const favoriteIds = useFavoritesStore((state) => state.favoriteIds);
+  const favoritesCount = favoriteIds.length;
 
   const navItems = [
-    { to: '/', icon: Home, label: t('navHome') },
-    { to: '/explore', icon: Search, label: t('navExplore') },
-    { to: '/post', icon: PlusCircle, label: t('navPost') },
-    { to: '/profile', icon: User, label: t('navProfile') },
+    { to: "/", icon: Home, label: t("navHome"), badge: 0 },
+    {
+      to: "/favorites",
+      icon: Heart,
+      label: t("navFavorites"),
+      badge: favoritesCount,
+    },
+    { to: "/post", icon: PlusCircle, label: t("navPost"), badge: 0 },
+    { to: "/profile", icon: User, label: t("navProfile"), badge: 0 },
   ];
 
   return (
@@ -17,20 +26,26 @@ export function BottomNav() {
       <div className="flex items-center justify-around">
         {navItems.map((item) => {
           const Icon = item.icon;
-
           return (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex flex-col items-center gap-0.5 text-xs font-medium px-3 py-1 rounded-xl transition-colors ${
+                `flex flex-col items-center gap-0.5 text-xs font-medium px-3 py-1 rounded-xl relative transition-colors ${
                   isActive
-                    ? 'text-emerald-600 bg-emerald-50'
-                    : 'text-slate-500 hover:text-slate-900'
+                    ? "text-emerald-600 bg-emerald-50"
+                    : "text-slate-500 hover:text-slate-900"
                 }`
               }
             >
-              <Icon className="w-5 h-5" />
+              <div className="relative">
+                <Icon className="w-5 h-5" />
+                {item.badge > 0 && (
+                  <span className="absolute -top-1 -right-2.5 px-1.5 py-0.25 bg-red-500 text-white rounded-full text-[9px] font-black border border-white">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px]">{item.label}</span>
             </NavLink>
           );

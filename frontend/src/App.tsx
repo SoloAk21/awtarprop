@@ -1,10 +1,10 @@
-import { useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React, { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Header } from "./components/Header.js";
 import { BottomNav } from "./components/BottomNav.js";
 import { ProtectedRoute } from "./components/ProtectedRoute.js";
 import { HomePage } from "./pages/HomePage.js";
-import { ExplorePage } from "./pages/ExplorePage.js";
+import { FavoritesPage } from "./pages/FavoritesPage.js";
 import { PostPropertyPage } from "./pages/PostPropertyPage.js";
 import { ProfilePage } from "./pages/ProfilePage.js";
 import { useAuthStore } from "./store/useAuthStore.js";
@@ -19,7 +19,6 @@ export function App() {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
     }
-    // Auto authenticate on mount
     authenticateTelegram();
   }, [authenticateTelegram]);
 
@@ -30,7 +29,8 @@ export function App() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/explore" element={<Navigate to="/" replace />} />
+            <Route path="/favorites" element={<FavoritesPage />} />
             <Route
               path="/post"
               element={
