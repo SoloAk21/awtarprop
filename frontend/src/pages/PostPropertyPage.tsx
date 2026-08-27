@@ -39,7 +39,6 @@ import {
   Check,
   Camera,
   Loader2,
-  Sparkles,
   Wand2,
   Hash,
   Eye,

@@ -6,10 +6,12 @@ import React, {
   useEffect,
 } from "react";
 import { useTranslation } from "../hooks/useTranslation.js";
+import { type LanguageKey } from "../i18n/translations.js";
 import { useAuthStore } from "../store/useAuthStore.js";
 import { useFavoritesStore } from "../store/useFavoritesStore.js";
 import { MultiImageGrid } from "./MultiImageGrid.js";
 import { EditPropertyModal } from "./EditPropertyModal.js";
+import { toast } from "sonner";
 import {
   MapPin,
   Bed,
@@ -37,8 +39,14 @@ export interface SocialFeedPostProps {
   onOpenDetails?: (property: any) => void;
 }
 
-function formatTimeAgo(dateString?: string, isAmharic = false): string {
-  if (!dateString) return isAmharic ? "አሁን" : "Just now";
+function formatTimeAgo(
+  dateString?: string,
+  t?: (key: LanguageKey) => string,
+  isAmharic = false,
+): string {
+  if (!dateString)
+    return t ? t("justNow" as LanguageKey) : isAmharic ? "አሁን" : "Just now";
+
   const now = new Date();
   const past = new Date(dateString);
   const diffMs = now.getTime() - past.getTime();
@@ -46,13 +54,27 @@ function formatTimeAgo(dateString?: string, isAmharic = false): string {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMins < 1) return isAmharic ? "አሁን" : "Just now";
-  if (diffMins < 60)
-    return isAmharic ? `ከ ${diffMins} ደቂቃ በፊት` : `${diffMins}m ago`;
-  if (diffHours < 24)
-    return isAmharic ? `ከ ${diffHours} ሰዓት በፊት` : `${diffHours}h ago`;
-  if (diffDays < 7)
-    return isAmharic ? `ከ ${diffDays} ቀን በፊት` : `${diffDays}d ago`;
+  if (diffMins < 1)
+    return t ? t("justNow" as LanguageKey) : isAmharic ? "አሁን" : "Just now";
+
+  if (diffMins < 60) {
+    return isAmharic
+      ? `ከ ${diffMins} ${t ? t("minutesAgo" as LanguageKey) : "ደቂቃ በፊት"}`
+      : `${diffMins}m ago`;
+  }
+
+  if (diffHours < 24) {
+    return isAmharic
+      ? `ከ ${diffHours} ${t ? t("hoursAgo" as LanguageKey) : "ሰዓት በፊት"}`
+      : `${diffHours}h ago`;
+  }
+
+  if (diffDays < 7) {
+    return isAmharic
+      ? `ከ ${diffDays} ${t ? t("daysAgo" as LanguageKey) : "ቀን በፊት"}`
+      : `${diffDays}d ago`;
+  }
+
   return past.toLocaleDateString(isAmharic ? "am-ET" : "en-US", {
     month: "short",
     day: "numeric",
@@ -70,6 +92,7 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
     translatePurpose,
     translateProviderType,
   } = useTranslation();
+
   const isAmharic = currentLanguage === "AM";
 
   const user = useAuthStore((state) => state.user);
@@ -79,20 +102,21 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Check if current user owns this listing
   const isOwner = useMemo(() => {
     if (!user) return false;
+
     return (
       user.id === property.providerId ||
       String(user.telegramId) === String(property.provider?.telegramId)
     );
   }, [user, property.providerId, property.provider?.telegramId]);
 
-  // Check if property was edited (>60s difference between created and updated)
   const isEdited = useMemo(() => {
     if (!property.createdAt || !property.updatedAt) return false;
+
     return (
       new Date(property.updatedAt).getTime() -
         new Date(property.createdAt).getTime() >
@@ -106,16 +130,22 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
         setShowOptionsMenu(false);
       }
     }
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const title = isAmharic
     ? property.titleAm || property.titleEn
     : property.titleEn || property.titleAm;
+
   const description = isAmharic
     ? property.descriptionAm || property.descriptionEn
     : property.descriptionEn || property.descriptionAm;
+
   const favorited = useMemo(
     () => favoriteIds.includes(property.id),
     [favoriteIds, property.id],
@@ -140,6 +170,7 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
   }, [amenities]);
 
   const shouldTruncate = description && description.length > 110;
+
   const displayText =
     shouldTruncate && !isExpanded
       ? `${description.slice(0, 110)}...`
@@ -149,10 +180,14 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
     (e: React.MouseEvent) => {
       e.stopPropagation();
       setShowOptionsMenu(false);
+
       const shareText = encodeURIComponent(
         `${title} - ${formatCurrency(Number(property.priceETB))}`,
       );
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${shareText}`;
+
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(
+        window.location.origin,
+      )}&text=${shareText}`;
 
       if (window.Telegram?.WebApp?.openTelegramLink) {
         window.Telegram.WebApp.openTelegramLink(shareUrl);
@@ -165,10 +200,15 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
 
   const handleOpenMapLocation = (e: React.MouseEvent) => {
     e.stopPropagation();
+
     const mapUrl =
       property.latitude && property.longitude
         ? `https://www.google.com/maps/search/?api=1&query=${property.latitude},${property.longitude}`
-        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property.areaName}, ${property.subCity || ""}, ${property.region}`)}`;
+        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            `${property.areaName}, ${property.subCity || ""}, ${
+              property.region
+            }`,
+          )}`;
 
     if (window.Telegram?.WebApp?.openLink) {
       window.Telegram.WebApp.openLink(mapUrl);
@@ -177,69 +217,84 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
     }
   };
 
-  const handleCopyLink = (e: React.MouseEvent) => {
+  const handleCopyLink = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowOptionsMenu(false);
+
     const shareUrl = `${window.location.origin}?startapp=prop_${property.id}`;
-    navigator.clipboard.writeText(shareUrl);
-    alert(
-      isAmharic ? "የማስታወቂያው ሊንክ ተቀድቷል!" : "Listing link copied to clipboard!",
-    );
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success(t("linkCopied" as LanguageKey));
+    } catch {
+      toast.error(t("copyLinkFailed" as LanguageKey));
+    }
+  };
+
+  const handleReport = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowOptionsMenu(false);
+    toast.success(t("reportSubmitted" as LanguageKey));
   };
 
   const telegramUsername = property.provider?.username;
   const contactPhone = property.provider?.phoneNumber;
+
   const timeAgoText = useMemo(
-    () => formatTimeAgo(property.createdAt, isAmharic),
-    [property.createdAt, isAmharic],
+    () => formatTimeAgo(property.createdAt, t, isAmharic),
+    [property.createdAt, t, isAmharic],
   );
 
   return (
     <article className="bg-white border-b border-slate-100 pb-3 mb-2 relative">
-      {/* 1. USER / PROVIDER HEADER WITH 3-DOT MENU */}
+      {/* USER / PROVIDER HEADER */}
       <div className="px-4 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-full flex items-center justify-center font-extrabold text-xs shadow-xs shrink-0 relative">
             {property.provider?.firstName?.charAt(0) || "U"}
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full" />
           </div>
+
           <div>
             <div className="flex items-center gap-1.5">
               <h4 className="font-bold text-slate-900 text-xs leading-none">
                 {property.provider?.firstName}{" "}
                 {property.provider?.lastName || ""}
               </h4>
+
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+
               <span className="text-[9px] font-extrabold bg-slate-100 text-slate-700 px-1.5 py-0.25 rounded uppercase">
                 {translateProviderType(property.providerType)}
               </span>
+
               {isEdited && (
                 <span className="text-[8px] font-bold bg-slate-100 text-slate-500 px-1 py-0.25 rounded flex items-center gap-0.5">
                   <History className="w-2.5 h-2.5 text-slate-400" />
-                  <span>Edited</span>
+                  <span>{t("edited" as LanguageKey)}</span>
                 </span>
               )}
             </div>
+
             <p className="text-[10px] text-slate-400 font-medium leading-none mt-1">
               @{property.provider?.username || "user"} • {timeAgoText}
             </p>
           </div>
         </div>
 
-        {/* 3-Dot Options Button & Dropdown */}
+        {/* OPTIONS MENU */}
         <div className="relative" ref={menuRef}>
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              setShowOptionsMenu(!showOptionsMenu);
+              setShowOptionsMenu((prev) => !prev);
             }}
             className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
           >
             <MoreHorizontal className="w-4 h-4" />
           </button>
 
-          {/* Context Popover Dropdown */}
           {showOptionsMenu && (
             <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-40 text-xs font-semibold text-slate-800 divide-y divide-slate-100 animate-in fade-in duration-100">
               {isOwner && (
@@ -253,9 +308,7 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
                   className="w-full px-3.5 py-2.5 text-left flex items-center gap-2 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
                 >
                   <Pencil className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>
-                    {isAmharic ? "ማስታወቂያውን አቅርብ / አርም" : "Edit Listing"}
-                  </span>
+                  <span>{t("editListing" as LanguageKey)}</span>
                 </button>
               )}
 
@@ -265,7 +318,7 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
                 className="w-full px-3.5 py-2.5 text-left flex items-center gap-2 hover:bg-slate-50 transition-colors"
               >
                 <Share2 className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                <span>{isAmharic ? "ማስታወቂያውን አጋራ" : "Share Listing"}</span>
+                <span>{t("shareListing" as LanguageKey)}</span>
               </button>
 
               <button
@@ -274,25 +327,17 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
                 className="w-full px-3.5 py-2.5 text-left flex items-center gap-2 hover:bg-slate-50 transition-colors"
               >
                 <Copy className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                <span>{isAmharic ? "ሊንክ ቅዳ" : "Copy Link"}</span>
+                <span>{t("copyLink" as LanguageKey)}</span>
               </button>
 
               {!isOwner && (
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowOptionsMenu(false);
-                    alert(
-                      isAmharic
-                        ? "ማስታወቂያው ጥቆማ ደርሶናል!"
-                        : "Report submitted to moderators.",
-                    );
-                  }}
+                  onClick={handleReport}
                   className="w-full px-3.5 py-2.5 text-left flex items-center gap-2 hover:bg-red-50 text-red-600 transition-colors"
                 >
                   <Flag className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                  <span>{isAmharic ? "ጥቆማ ስጥ" : "Report Listing"}</span>
+                  <span>{t("reportListing" as LanguageKey)}</span>
                 </button>
               )}
             </div>
@@ -300,13 +345,13 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
         </div>
       </div>
 
-      {/* 2. UNCLUTTERED MULTI-PHOTO COLLAGE */}
+      {/* MULTI-PHOTO COLLAGE */}
       <MultiImageGrid
         images={images}
         onImageClick={(index) => onOpenImageIndex(property, index)}
       />
 
-      {/* 3. COMPACT ACTION BAR */}
+      {/* ACTION BAR */}
       <div className="px-4 py-2 flex items-center justify-between border-b border-slate-100/80">
         <div className="flex items-center gap-1">
           {telegramUsername && (
@@ -357,28 +402,30 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
                 ? "bg-emerald-50 text-emerald-600"
                 : "text-slate-500 hover:bg-slate-100"
             }`}
-            title={t("save")}
+            title={favorited ? t("saved") : t("save")}
           >
             <Bookmark
-              className={`w-4 h-4 stroke-[2] ${favorited ? "fill-emerald-600 text-emerald-600" : ""}`}
+              className={`w-4 h-4 stroke-[2] ${
+                favorited ? "fill-emerald-600 text-emerald-600" : ""
+              }`}
             />
           </button>
         </div>
       </div>
 
-      {/* 4. CAPTION SECTION */}
+      {/* CAPTION SECTION */}
       <div className="px-4 pt-2.5 space-y-2.5">
         <h3 className="font-extrabold text-slate-900 text-sm leading-snug">
           {title}
         </h3>
 
-        {/* FIRST: Description Text */}
         <div className="text-xs text-slate-600 leading-relaxed font-normal whitespace-pre-line">
           <span>{displayText}</span>
+
           {shouldTruncate && (
             <button
               type="button"
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={() => setIsExpanded((prev) => !prev)}
               className="ml-1 text-emerald-600 font-bold hover:underline"
             >
               {isExpanded ? t("less") : t("more")}
@@ -386,10 +433,11 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
           )}
         </div>
 
-        {/* SECOND: Vertical Specifications & Interactive Map Location Link */}
+        {/* SPECIFICATIONS */}
         <div className="pt-2 border-t border-slate-100 space-y-1.5 text-xs font-semibold text-slate-700">
           <div className="flex items-center gap-2 text-emerald-700 font-extrabold">
             <Tag className="w-3.5 h-3.5 stroke-[2] text-emerald-600 shrink-0" />
+
             <span>
               {translatePurpose(property.purpose)} ·{" "}
               {translateCategory(property.category)} ·{" "}
@@ -397,13 +445,13 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
             </span>
           </div>
 
-          {/* Clickable Map Location Link */}
           <button
             type="button"
             onClick={handleOpenMapLocation}
             className="flex items-center gap-2 text-slate-700 font-semibold hover:text-emerald-700 text-left transition-colors"
           >
             <MapPin className="w-3.5 h-3.5 stroke-[2] text-emerald-500 shrink-0" />
+
             <span className="underline decoration-dotted underline-offset-2">
               {property.areaName},{" "}
               {property.subCity ? `${property.subCity}, ` : ""}
@@ -414,6 +462,7 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
           {property.bedrooms !== undefined && property.bedrooms !== null && (
             <div className="flex items-center gap-2 text-slate-700">
               <Bed className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+
               <span>
                 {property.bedrooms} {t("beds")}
               </span>
@@ -423,6 +472,7 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
           {property.bathrooms !== undefined && property.bathrooms !== null && (
             <div className="flex items-center gap-2 text-slate-700">
               <Bath className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+
               <span>
                 {property.bathrooms} {t("baths")}
               </span>
@@ -431,8 +481,9 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
 
           {property.areaSqMeters !== undefined &&
             property.areaSqMeters !== null && (
-              <div className="flex items-center gap-2 text-slate-700">
+              <div className="flex items-center gap-1.5 text-slate-700">
                 <Maximize className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+
                 <span>
                   {property.areaSqMeters} {t("sqm")}
                 </span>
@@ -442,6 +493,7 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
           {property.isFurnished && (
             <div className="flex items-center gap-2 text-slate-700">
               <Sparkles className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+
               <span>{t("furnished")}</span>
             </div>
           )}
@@ -449,6 +501,7 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
           {property.condition && (
             <div className="flex items-center gap-2 text-slate-700">
               <Award className="w-3.5 h-3.5 stroke-[2] text-slate-500 shrink-0" />
+
               <span>
                 {t("condition")}: {property.condition}
               </span>
@@ -460,6 +513,7 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
               <span className="text-slate-400 font-normal">
                 {t("features")}:
               </span>
+
               <span>{amenityHashtags}</span>
             </div>
           )}

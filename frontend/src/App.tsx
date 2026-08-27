@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Header } from "./components/Header.js";
 import { BottomNav } from "./components/BottomNav.js";
+import { ToastContainer } from "./components/ToastContainer.js";
 import { ProtectedRoute } from "./components/ProtectedRoute.js";
 import { HomePage } from "./pages/HomePage.js";
 import { FavoritesPage } from "./pages/FavoritesPage.js";
@@ -26,6 +27,7 @@ export function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col max-w-md mx-auto relative border-x border-slate-200/80">
         <Header />
+        <ToastContainer />
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<HomePage />} />

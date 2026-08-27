@@ -8,14 +8,14 @@ export const translations = {
     navPost: "Post Ad",
     navProfile: "Profile",
 
-    // Purposes (Mapped exactly to Backend Enums)
+    // Purposes
     FOR_SALE: "For Sale",
     FOR_RENT: "For Rent",
     LOOKING_TO_BUY: "Buy Request",
     LOOKING_TO_RENT: "Rent Request",
     allPurposes: "All Purposes",
 
-    // Categories (Mapped exactly to Backend Enums)
+    // Categories
     allCategories: "All Categories",
     APARTMENT: "Apartment",
     CONDOMINIUM: "Condominium",
@@ -29,7 +29,7 @@ export const translations = {
     COMMERCIAL_LAND: "Commercial Land",
     AGRICULTURAL_LAND: "Agricultural Land",
 
-    // Provider Types (Mapped exactly to Backend Enums)
+    // Provider Types
     OWNER: "Owner",
     BROKER: "Broker / Delala",
     AGENT: "Agent",
@@ -205,6 +205,22 @@ export const translations = {
     noSavedProperties: "No Saved Properties Yet",
     noSavedDesc:
       "Tap the bookmark icon on any property listing to save it here for quick access.",
+
+    linkCopied: "Listing link copied to clipboard!",
+    copyLinkFailed: "Failed to copy listing link.",
+    reportSubmitted: "Report submitted to moderators.",
+
+    // Feed Post Options Menu
+    editListing: "Edit Listing",
+    shareListing: "Share Listing",
+    copyLink: "Copy Link",
+    reportListing: "Report Listing",
+    edited: "Edited",
+
+    justNow: "Just now",
+    minutesAgo: "m ago",
+    hoursAgo: "h ago",
+    daysAgo: "d ago",
   },
 
   AM: {
@@ -409,6 +425,22 @@ export const translations = {
     loadingSaved: "የተቀመጡ ንብረቶችን በመጫን ላይ...",
     noSavedProperties: "ምንም የተቀመጡ ንብረቶች የሉም",
     noSavedDesc: "በማንኛውም ንብረት ላይ የማስቀመጫ ምልክቱን በመጫን በፍጥነት ለማግኘት እዚህ ማስቀመጥ ይችላሉ።",
+
+    linkCopied: "የማስታወቂያው ሊንክ ተቀድቷል!",
+    copyLinkFailed: "ሊንኩን መቅዳት አልተቻለም።",
+    reportSubmitted: "ጥቆማው ለተቆጣጣሪዎች ተልኳል።",
+
+    // Feed Post Options Menu
+    editListing: "ማስታወቂያውን አርም",
+    shareListing: "ማስታወቂያውን አጋራ",
+    copyLink: "ሊንክ ቅዳ",
+    reportListing: "ጥቆማ ስጥ",
+    edited: "ተስተካክሏል",
+
+    justNow: "አሁን",
+    minutesAgo: "ደቂቃ በፊት",
+    hoursAgo: "ሰዓት በፊት",
+    daysAgo: "ቀን በፊት",
   },
 } as const;
 
