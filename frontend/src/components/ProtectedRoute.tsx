@@ -9,7 +9,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     return (
-      <div className="w-full max-w-md mx-auto p-4 pb-24 space-y-4 text-slate-800 text-center py-12">
+      <div className="w-full  p-4 pb-24 space-y-4 text-slate-800 text-center py-12">
         <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto border border-amber-200/80">
           <ShieldAlert className="w-6 h-6" />
         </div>

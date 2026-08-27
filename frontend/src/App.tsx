@@ -25,7 +25,7 @@ export function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col max-w-md mx-auto relative border-x border-slate-200/80">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col  relative border-x border-slate-200/80">
         <Header />
         <ToastContainer />
         <main className="flex-1">

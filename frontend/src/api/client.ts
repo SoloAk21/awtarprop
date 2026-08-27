@@ -1,11 +1,13 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://192.168.128.1:5000/api/v1";
 
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true", // Bypasses ngrok mobile warning screen
   },
 });
 

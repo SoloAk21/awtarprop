@@ -274,7 +274,7 @@ export function HomePage() {
   }, []);
 
   return (
-    <div className="w-full max-w-md mx-auto pb-24 text-slate-800">
+    <div className="w-full  pb-24 text-slate-800">
       {/* Hero Banner */}
       <div className="p-3.5 pb-2">
         <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 text-white p-4 rounded-2xl shadow-sm space-y-2.5">

@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../../config/db.js";
 import { env } from "../../config/env.js";
 import { verifyTelegramInitData } from "../../utils/telegramAuth.js";
-import { UnauthorizedError, NotFoundError } from "../../errors/AppError.js";
+import { UnauthorizedError } from "../../errors/AppError.js";
 import {
   TelegramAuthInput,
   UpdatePhoneInput,
@@ -10,6 +10,7 @@ import {
   UpdateProviderTypeInput,
 } from "./auth.schema.js";
 import { ProviderType, PreferredLanguage } from "@awtarprop/shared";
+import { logger } from "../../utils/logger.js";
 
 export interface AuthJwtPayload {
   userId: string;
@@ -23,16 +24,26 @@ export class AuthService {
 
     let validatedTelegram = verifyTelegramInitData(input.initData, botToken);
 
+    // Development fallback: Extract real Telegram user from initData if signature fails in local dev
     if (!validatedTelegram && env.NODE_ENV === "development") {
       try {
         const urlParams = new URLSearchParams(input.initData);
         const userStr = urlParams.get("user");
         if (userStr) {
+          const parsedUser = JSON.parse(userStr);
           validatedTelegram = {
-            user: JSON.parse(userStr),
+            user: {
+              id: parsedUser.id || 123456789,
+              first_name: parsedUser.first_name || "Telegram User",
+              last_name: parsedUser.last_name || null,
+              username: parsedUser.username || null,
+            },
             authDate: Math.floor(Date.now() / 1000),
             hash: "dev_mock_hash",
           };
+          logger.info(
+            `[DevAuth] Authenticated real Telegram user ${parsedUser.id} (${parsedUser.first_name})`,
+          );
         } else {
           validatedTelegram = {
             user: {

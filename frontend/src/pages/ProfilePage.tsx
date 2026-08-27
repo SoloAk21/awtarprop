@@ -60,7 +60,7 @@ export function ProfilePage() {
   ];
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 pb-28 space-y-5 text-slate-800 relative">
+    <div className="w-full  p-4 pb-28 space-y-5 text-slate-800 relative">
       {/* 1. FLAT USER HEADER */}
       <div className="flex items-center justify-between py-1">
         <div className="flex items-center gap-3 min-w-0">

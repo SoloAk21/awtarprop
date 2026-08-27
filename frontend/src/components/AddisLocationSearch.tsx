@@ -268,7 +268,7 @@ export function AddisLocationSearch({
   };
 
   return (
-    <div className="relative w-full max-w-md mx-auto" ref={containerRef}>
+    <div className="relative w-full " ref={containerRef}>
       <div className="flex items-center gap-2 bg-slate-100/90 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-500 rounded-2xl px-3.5 py-2.5 transition-all border border-slate-200/80 shadow-xs">
         <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
         <input

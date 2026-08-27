@@ -40,7 +40,7 @@ export function FavoritesPage() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto pb-24 text-slate-800">
+    <div className="w-full  pb-24 text-slate-800">
       {/* Header Bar */}
       <div className="p-3.5 pb-2 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-2">
