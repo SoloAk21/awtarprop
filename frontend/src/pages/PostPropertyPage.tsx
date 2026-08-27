@@ -148,7 +148,7 @@ function CustomSearchSelect({
               type="text"
               value={search}
               onChange={(e) => setSearch(stripEmojis(e.target.value))}
-              placeholder={t("typeToFilter")}
+              placeholder={t("typeToFilter" as LanguageKey)}
               autoFocus
               className="w-full bg-transparent text-xs font-normal text-slate-800 outline-none placeholder:text-slate-400"
             />
@@ -190,7 +190,7 @@ function CustomSearchSelect({
               })
             ) : (
               <div className="px-3 py-2 text-center text-xs text-slate-400">
-                {t("noMatchingResults")}
+                {t("noMatchingResults" as LanguageKey)}
               </div>
             )}
           </div>
@@ -272,10 +272,9 @@ export function PostPropertyPage() {
 
   const isLandCategory = selectedCategory?.includes("LAND");
 
-  // Dynamic Options Translated efficiently
   const categoryOptions = CATEGORIES.map((cat) => ({
     value: cat,
-    label: t(cat) || cat,
+    label: t(cat as LanguageKey) || cat,
   }));
 
   const subCityOptions = ADDIS_ABABA_SUBCITIES.map((subCity) => ({
@@ -372,7 +371,7 @@ export function PostPropertyPage() {
 
       setAiGeneratedSuccess(true);
     } catch (error) {
-      setSubmitError(t("aiFailed"));
+      setSubmitError(t("aiFailed" as LanguageKey));
     } finally {
       setIsAiGenerating(false);
     }
@@ -432,7 +431,9 @@ export function PostPropertyPage() {
 
       navigate("/profile");
     } catch (error: any) {
-      setSubmitError(error?.response?.data?.message || t("submitFailed"));
+      setSubmitError(
+        error?.response?.data?.message || t("submitFailed" as LanguageKey),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -446,10 +447,10 @@ export function PostPropertyPage() {
     }));
     return {
       id: "live_preview",
-      titleEn: selectedTitleEn || t("previewTitleEn"),
-      titleAm: selectedTitleAm || t("previewTitleAm"),
-      descriptionEn: selectedDescEn || t("previewDescEn"),
-      descriptionAm: selectedDescAm || t("previewDescAm"),
+      titleEn: selectedTitleEn || t("previewTitleEn" as LanguageKey),
+      titleAm: selectedTitleAm || t("previewTitleAm" as LanguageKey),
+      descriptionEn: selectedDescEn || t("previewDescEn" as LanguageKey),
+      descriptionAm: selectedDescAm || t("previewDescAm" as LanguageKey),
       category: selectedCategory,
       purpose: selectedPurpose,
       priceETB: selectedPriceETB || 0,
@@ -461,15 +462,15 @@ export function PostPropertyPage() {
       amenities: selectedAmenities,
       region: "Addis Ababa",
       subCity: selectedSubCity,
-      areaName: selectedAreaName || t("addisAbaba"),
+      areaName: selectedAreaName || t("addisAbaba" as LanguageKey),
       latitude: selectedLatitude,
       longitude: selectedLongitude,
       providerType: selectedProviderType,
       viewsCount: 0,
       images: mockImages,
       provider: {
-        firstName: user?.firstName || t("valued"),
-        lastName: user?.lastName || t("user"),
+        firstName: user?.firstName || t("valued" as LanguageKey),
+        lastName: user?.lastName || t("user" as LanguageKey),
         username: user?.username || "user",
         phoneNumber: user?.phoneNumber || "+251...",
       },
@@ -507,11 +508,11 @@ export function PostPropertyPage() {
             <PlusCircle className="h-4 w-4" />
           </div>
           <h2 className="text-xs font-semibold text-slate-800">
-            {t("navPost")}
+            {t("navPost" as LanguageKey)}
           </h2>
         </div>
         <span className="rounded-full border border-emerald-100/60 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700">
-          {FLAT_PUBLICATION_FEE} ETB {t("publicationFee")}
+          {FLAT_PUBLICATION_FEE} ETB {t("publicationFee" as LanguageKey)}
         </span>
       </div>
 
@@ -522,30 +523,33 @@ export function PostPropertyPage() {
         </div>
       )}
 
-      {/* AI */}
-      <div className="space-y-3 rounded-2xl bg-slate-900 p-3.5 text-white shadow-sm">
+      {/* AI Assistant - Humanistic, Soft Emerald Tint */}
+      <div className="space-y-3 rounded-xl border border-emerald-200/60 bg-emerald-50/40 p-3.5 shadow-xs">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-emerald-400" />
-            <span className="text-xs font-bold tracking-tight">
-              {t("aiTitle")}
+          <div className="flex items-center gap-1.5">
+            <Wand2 className="h-4 w-4 text-emerald-600" />
+            <span className="text-xs font-extrabold text-emerald-950">
+              {t("aiTitle" as LanguageKey)}
             </span>
           </div>
-          <span className="rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
-            {t("addisAbaba")}
+          <span className="rounded-md border border-emerald-200/60 bg-white/80 px-2 py-0.5 text-[9px] font-bold text-emerald-800">
+            {t("addisAbaba" as LanguageKey)}
           </span>
         </div>
-        <p className="text-[11px] font-normal leading-relaxed text-slate-300">
-          {t("aiDesc")}
+
+        <p className="text-[11px] font-normal leading-relaxed text-emerald-900/70">
+          {t("aiDesc" as LanguageKey)}
         </p>
-        <div className="space-y-2">
+
+        <div className="space-y-2.5">
           <textarea
             rows={2}
             value={aiPrompt}
             onChange={(e) => setAiPrompt(stripEmojis(e.target.value))}
-            placeholder={t("aiPlaceholder")}
-            className="w-full resize-none rounded-xl border border-white/20 bg-white/10 p-2.5 text-xs font-normal text-white outline-none placeholder:text-slate-400 focus:border-emerald-400"
+            placeholder={t("aiPlaceholder" as LanguageKey)}
+            className="w-full resize-none rounded-lg border border-emerald-200/60 bg-white px-3 py-2 text-xs font-normal text-slate-800 outline-none placeholder:text-slate-400 focus:border-emerald-500 transition-all shadow-xs"
           />
+
           <div className="scrollbar-none flex gap-1.5 overflow-x-auto pb-1">
             {EXAMPLE_PROMPTS.map((example, index) => (
               <button
@@ -555,34 +559,36 @@ export function PostPropertyPage() {
                   setAiPrompt(example);
                   handleGenerateAiAd(example);
                 }}
-                className="shrink-0 whitespace-nowrap rounded-lg border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-medium text-emerald-200 transition-colors hover:bg-white/20"
+                className="shrink-0 whitespace-nowrap rounded-lg border border-emerald-200/60 bg-white/70 px-2.5 py-1.5 text-[10px] font-medium text-emerald-800 transition-colors hover:border-emerald-400 hover:bg-white shadow-xs"
               >
                 {example.slice(0, 35)}...
               </button>
             ))}
           </div>
+
           <button
             type="button"
             onClick={() => handleGenerateAiAd()}
             disabled={isAiGenerating || aiPrompt.trim().length < 5}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2 text-xs font-bold text-slate-950 shadow-sm transition-colors hover:bg-emerald-600 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-600 py-2.5 text-xs font-bold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50 shadow-xs"
           >
             {isAiGenerating ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span>{t("generatingAd")}</span>
+                <span>{t("generatingAd" as LanguageKey)}</span>
               </>
             ) : (
               <>
                 <Wand2 className="h-3.5 w-3.5" />
-                <span>{t("generateAdBtn")}</span>
+                <span>{t("generateAdBtn" as LanguageKey)}</span>
               </>
             )}
           </button>
+
           {aiGeneratedSuccess && (
-            <div className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-300">
+            <div className="flex items-center gap-1.5 pt-0.5 text-[10px] font-bold text-emerald-700">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              {t("aiSuccess")}
+              {t("aiSuccess" as LanguageKey)}
             </div>
           )}
         </div>
@@ -592,7 +598,7 @@ export function PostPropertyPage() {
         {/* Purpose */}
         <div className="space-y-1.5">
           <label className="block text-xs font-medium text-slate-700">
-            {t("listingPurposeLabel")}
+            {t("listingPurposeLabel" as LanguageKey)}
           </label>
           <div className="scrollbar-none flex gap-1.5 overflow-x-auto pb-1">
             {PURPOSES.map((item) => {
@@ -612,7 +618,7 @@ export function PostPropertyPage() {
                   <Icon
                     className={`h-3.5 w-3.5 ${isSelected ? "text-white" : "text-slate-400"}`}
                   />
-                  <span>{t(item.id)}</span>
+                  <span>{t(item.id as LanguageKey)}</span>
                 </button>
               );
             })}
@@ -621,18 +627,18 @@ export function PostPropertyPage() {
 
         {/* Category */}
         <CustomSearchSelect
-          label={t("propertyCategoryLabel")}
+          label={t("propertyCategoryLabel" as LanguageKey)}
           options={categoryOptions}
           value={selectedCategory}
           onChange={(value) => setValue("category", value)}
-          placeholder={t("selectCategory")}
+          placeholder={t("selectCategory" as LanguageKey)}
           error={errors.category?.message as string}
         />
 
         {/* Provider */}
         <div className="space-y-1.5">
           <label className="block text-xs font-medium text-slate-700">
-            {t("providerTypeLabel")}
+            {t("providerTypeLabel" as LanguageKey)}
           </label>
           <div className="scrollbar-none flex gap-1.5 overflow-x-auto pb-1">
             {PROVIDERS.map((pid) => {
@@ -648,7 +654,7 @@ export function PostPropertyPage() {
                       : "border-slate-200 bg-slate-50/80 text-slate-600 hover:bg-slate-100"
                   }`}
                 >
-                  {t(pid)}
+                  {t(pid as LanguageKey)}
                 </button>
               );
             })}
@@ -659,10 +665,10 @@ export function PostPropertyPage() {
         <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
           <div className="flex items-center justify-between">
             <label className="block text-xs font-medium text-slate-700">
-              {t("propertyPhotos")} ({selectedPhotos.length}/5)
+              {t("propertyPhotos" as LanguageKey)} ({selectedPhotos.length}/5)
             </label>
             <span className="text-[10px] font-normal text-slate-400">
-              {t("photoFormats")}
+              {t("photoFormats" as LanguageKey)}
             </span>
           </div>
           <input
@@ -693,7 +699,7 @@ export function PostPropertyPage() {
                 </button>
                 {index === 0 && (
                   <span className="absolute inset-x-0 bottom-0 bg-emerald-600/90 py-0.5 text-center text-[8px] font-bold text-white">
-                    {t("mainPhoto")}
+                    {t("mainPhoto" as LanguageKey)}
                   </span>
                 )}
               </div>
@@ -706,7 +712,7 @@ export function PostPropertyPage() {
               >
                 <Camera className="h-4 w-4" />
                 <span className="mt-0.5 text-[9px] font-medium">
-                  {t("addPhoto")}
+                  {t("addPhoto" as LanguageKey)}
                 </span>
               </button>
             )}
@@ -717,31 +723,31 @@ export function PostPropertyPage() {
         <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-700">
-              {t("titleEnLabel")}
+              {t("titleEnLabel" as LanguageKey)}
             </label>
             <input
               type="text"
               {...register("titleEn")}
               onChange={(e) => setValue("titleEn", stripEmojis(e.target.value))}
-              placeholder={t("titleEnPlaceholder")}
+              placeholder={t("titleEnPlaceholder" as LanguageKey)}
               className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-normal outline-none focus:border-emerald-500"
             />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-700">
-              {t("titleAmLabel")}
+              {t("titleAmLabel" as LanguageKey)}
             </label>
             <input
               type="text"
               {...register("titleAm")}
               onChange={(e) => setValue("titleAm", stripEmojis(e.target.value))}
-              placeholder={t("titleAmPlaceholder")}
+              placeholder={t("titleAmPlaceholder" as LanguageKey)}
               className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-normal outline-none focus:border-emerald-500"
             />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-700">
-              {t("priceLabel")}
+              {t("priceLabel" as LanguageKey)}
             </label>
             <input
               type="number"
@@ -757,7 +763,7 @@ export function PostPropertyPage() {
             <div className="flex gap-2">
               <div className="flex-1">
                 <label className="mb-1 block text-[11px] font-medium text-slate-600">
-                  {t("beds")}
+                  {t("beds" as LanguageKey)}
                 </label>
                 <input
                   type="number"
@@ -767,7 +773,7 @@ export function PostPropertyPage() {
               </div>
               <div className="flex-1">
                 <label className="mb-1 block text-[11px] font-medium text-slate-600">
-                  {t("baths")}
+                  {t("baths" as LanguageKey)}
                 </label>
                 <input
                   type="number"
@@ -777,7 +783,7 @@ export function PostPropertyPage() {
               </div>
               <div className="flex-1">
                 <label className="mb-1 block text-[11px] font-medium text-slate-600">
-                  {t("sqm")}
+                  {t("sqm" as LanguageKey)}
                 </label>
                 <input
                   type="number"
@@ -790,7 +796,7 @@ export function PostPropertyPage() {
             {/* Furnished */}
             <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2">
               <span className="text-xs font-medium text-slate-700">
-                {t("isFurnishedLabel")}
+                {t("isFurnishedLabel" as LanguageKey)}
               </span>
               <button
                 type="button"
@@ -806,7 +812,7 @@ export function PostPropertyPage() {
             {/* Amenities */}
             <div className="space-y-1.5">
               <label className="block text-xs font-medium text-slate-700">
-                {t("amenitiesLabel")}
+                {t("amenitiesLabel" as LanguageKey)}
               </label>
               <div className="flex gap-1.5">
                 <div className="relative flex-1">
@@ -821,7 +827,7 @@ export function PostPropertyPage() {
                         handleAddHashtag();
                       }
                     }}
-                    placeholder={t("amenitiesPlaceholder")}
+                    placeholder={t("amenitiesPlaceholder" as LanguageKey)}
                     className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2 text-xs font-medium outline-none focus:border-emerald-500"
                   />
                 </div>
@@ -830,7 +836,7 @@ export function PostPropertyPage() {
                   onClick={() => handleAddHashtag()}
                   className="h-8 rounded-lg bg-slate-200 px-3 text-xs font-bold text-slate-800 transition-colors hover:bg-slate-300"
                 >
-                  {t("addBtn")}
+                  {t("addBtn" as LanguageKey)}
                 </button>
               </div>
               <div className="flex flex-wrap gap-1.5 pt-1">
@@ -858,7 +864,7 @@ export function PostPropertyPage() {
         <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-700">
-              {t("descEnLabel")}
+              {t("descEnLabel" as LanguageKey)}
             </label>
             <textarea
               rows={2}
@@ -866,13 +872,13 @@ export function PostPropertyPage() {
               onChange={(e) =>
                 setValue("descriptionEn", stripEmojis(e.target.value))
               }
-              placeholder={t("descEnPlaceholder")}
+              placeholder={t("descEnPlaceholder" as LanguageKey)}
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-normal outline-none focus:border-emerald-500"
             />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-700">
-              {t("descAmLabel")}
+              {t("descAmLabel" as LanguageKey)}
             </label>
             <textarea
               rows={2}
@@ -880,7 +886,7 @@ export function PostPropertyPage() {
               onChange={(e) =>
                 setValue("descriptionAm", stripEmojis(e.target.value))
               }
-              placeholder={t("descAmPlaceholder")}
+              placeholder={t("descAmPlaceholder" as LanguageKey)}
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-normal outline-none focus:border-emerald-500"
             />
           </div>
@@ -890,7 +896,7 @@ export function PostPropertyPage() {
         <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
           <div className="space-y-1">
             <label className="block text-xs font-medium text-slate-700">
-              {t("locationSearchLabel")}
+              {t("locationSearchLabel" as LanguageKey)}
             </label>
             <AddisLocationSearch
               value={selectedAreaName}
@@ -898,11 +904,11 @@ export function PostPropertyPage() {
             />
           </div>
           <CustomSearchSelect
-            label={t("subCityLabel")}
+            label={t("subCityLabel" as LanguageKey)}
             options={subCityOptions}
             value={selectedSubCity}
             onChange={(value) => setValue("subCity", value)}
-            placeholder={t("selectSubCity")}
+            placeholder={t("selectSubCity" as LanguageKey)}
           />
           <LocationPickerMap
             initialLat={selectedLatitude || 9.0192}
@@ -916,10 +922,10 @@ export function PostPropertyPage() {
           <div className="flex items-center justify-between px-1">
             <span className="flex items-center gap-1.5 text-xs font-extrabold text-slate-900">
               <Eye className="h-4 w-4 text-emerald-600" />
-              <span>{t("livePreview")}</span>
+              <span>{t("livePreview" as LanguageKey)}</span>
             </span>
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-              {t("realTime")}
+              {t("realTime" as LanguageKey)}
             </span>
           </div>
           <div className="overflow-hidden rounded-2xl border-2 border-emerald-500/30 bg-white shadow-sm">
@@ -934,14 +940,14 @@ export function PostPropertyPage() {
         <div className="space-y-1 rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-emerald-950">
-              {t("publicationFee")}
+              {t("publicationFee" as LanguageKey)}
             </span>
             <span className="text-xs font-bold text-emerald-700">
               {FLAT_PUBLICATION_FEE} ETB
             </span>
           </div>
           <p className="text-[10px] font-normal leading-normal text-emerald-800">
-            {t("draftWarning")}
+            {t("draftWarning" as LanguageKey)}
           </p>
         </div>
 
@@ -954,13 +960,14 @@ export function PostPropertyPage() {
           {isSubmitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>{t("uploadingDraft")}</span>
+              <span>{t("uploadingDraft" as LanguageKey)}</span>
             </>
           ) : (
             <>
               <CheckCircle2 className="h-4 w-4" />
               <span>
-                {t("approveDraft")} ({selectedPhotos.length} {t("photos")})
+                {t("approveDraft" as LanguageKey)} ({selectedPhotos.length}{" "}
+                {t("photos" as LanguageKey)})
               </span>
             </>
           )}

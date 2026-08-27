@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "../hooks/useTranslation.js";
+import { type LanguageKey } from "../i18n/translations.js";
 import { useFavoritesStore } from "../store/useFavoritesStore.js";
 import { usePropertiesQuery } from "../hooks/useProperties.js";
 import { SocialFeedPost } from "../components/SocialFeedPost.js";
@@ -51,12 +52,12 @@ export function FavoritesPage() {
               {t("navFavorites")}
             </h2>
             <p className="text-[10px] text-slate-400 font-medium leading-none mt-1">
-              Your bookmarked property listings
+              {t("bookmarkedSubtitle" as LanguageKey)}
             </p>
           </div>
         </div>
         <span className="text-xs font-black px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg">
-          {favoriteProperties.length} Saved
+          {favoriteProperties.length} {t("savedCount" as LanguageKey)}
         </span>
       </div>
 
@@ -64,18 +65,17 @@ export function FavoritesPage() {
         <div className="py-20 flex flex-col items-center justify-center gap-2 text-slate-400">
           <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
           <span className="text-xs font-medium">
-            Loading saved properties...
+            {t("loadingSaved" as LanguageKey)}
           </span>
         </div>
       ) : favoriteProperties.length === 0 ? (
         <div className="p-8 mx-3.5 mt-4 bg-slate-50/50 rounded-2xl text-center border border-slate-100 space-y-2">
           <BookmarkX className="w-10 h-10 text-slate-300 mx-auto" />
           <p className="text-xs font-bold text-slate-700">
-            No Saved Properties Yet
+            {t("noSavedProperties" as LanguageKey)}
           </p>
           <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
-            Tap the bookmark icon on any property listing to save it here for
-            quick access.
+            {t("noSavedDesc" as LanguageKey)}
           </p>
         </div>
       ) : (

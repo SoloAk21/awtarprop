@@ -198,6 +198,13 @@ export const translations = {
     confirmPublish: "Confirm & Publish Listing",
     paymentFailed: "Payment processing failed",
     directConnect: "Direct Connect Marketplace",
+
+    bookmarkedSubtitle: "Your bookmarked property listings",
+    savedCount: "Saved",
+    loadingSaved: "Loading saved properties...",
+    noSavedProperties: "No Saved Properties Yet",
+    noSavedDesc:
+      "Tap the bookmark icon on any property listing to save it here for quick access.",
   },
 
   AM: {
@@ -396,6 +403,12 @@ export const translations = {
     confirmPublish: "አረጋግጥ እና ማስታወቂያውን አትም",
     paymentFailed: "የክፍያ ሂደት አልተሳካም",
     directConnect: "የቀጥታ ግንኙነት ገበያ",
+
+    bookmarkedSubtitle: "ያስቀመጧቸው ንብረቶች ዝርዝር",
+    savedCount: "የተቀመጡ",
+    loadingSaved: "የተቀመጡ ንብረቶችን በመጫን ላይ...",
+    noSavedProperties: "ምንም የተቀመጡ ንብረቶች የሉም",
+    noSavedDesc: "በማንኛውም ንብረት ላይ የማስቀመጫ ምልክቱን በመጫን በፍጥነት ለማግኘት እዚህ ማስቀመጥ ይችላሉ።",
   },
 } as const;
 
