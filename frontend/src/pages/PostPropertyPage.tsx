@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "../hooks/useTranslation.js";
+import { type LanguageKey } from "../i18n/translations.js";
 import { useAuthStore } from "../store/useAuthStore.js";
 import {
   createPropertyListing,
@@ -44,32 +45,24 @@ import {
   Eye,
 } from "lucide-react";
 
-const CATEGORY_OPTIONS = [
-  { value: "APARTMENT", label: "Apartment" },
-  { value: "CONDOMINIUM", label: "Condominium" },
-  { value: "RESIDENTIAL_HOUSE", label: "Residential House / Villa" },
-  { value: "STUDIO", label: "Studio" },
-  { value: "COMMERCIAL_SPACE", label: "Commercial Space / Shop" },
-  { value: "OFFICE", label: "Office" },
-  { value: "BUILDING", label: "Full Building" },
-  { value: "RESIDENTIAL_LAND", label: "Residential Land" },
-  { value: "COMMERCIAL_LAND", label: "Commercial Land" },
-  { value: "AGRICULTURAL_LAND", label: "Agricultural Land" },
+const CATEGORIES = [
+  "APARTMENT",
+  "CONDOMINIUM",
+  "RESIDENTIAL_HOUSE",
+  "STUDIO",
+  "COMMERCIAL_SPACE",
+  "OFFICE",
+  "BUILDING",
+  "RESIDENTIAL_LAND",
+  "COMMERCIAL_LAND",
+  "AGRICULTURAL_LAND",
 ];
-
-const PROVIDER_OPTIONS = [
-  { id: "OWNER", label: "Property Owner" },
-  { id: "BROKER", label: "Broker / Delala" },
-  { id: "AGENT", label: "Real Estate Agent" },
-  { id: "AGENCY", label: "Agency" },
-  { id: "DEVELOPER", label: "Developer" },
-];
-
-const PURPOSE_OPTIONS = [
-  { id: "FOR_SALE", label: "For Sale", icon: Home },
-  { id: "FOR_RENT", label: "For Rent", icon: Key },
-  { id: "LOOKING_TO_BUY", label: "Looking to Buy", icon: Search },
-  { id: "LOOKING_TO_RENT", label: "Looking to Rent", icon: Tag },
+const PROVIDERS = ["OWNER", "BROKER", "AGENT", "AGENCY", "DEVELOPER"];
+const PURPOSES = [
+  { id: "FOR_SALE", icon: Home },
+  { id: "FOR_RENT", icon: Key },
+  { id: "LOOKING_TO_BUY", icon: Search },
+  { id: "LOOKING_TO_RENT", icon: Tag },
 ];
 
 const EXAMPLE_PROMPTS = [
@@ -97,6 +90,7 @@ function CustomSearchSelect({
   label,
   error,
 }: SearchSelectProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -110,12 +104,8 @@ function CustomSearchSelect({
         setIsOpen(false);
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const filteredOptions = options.filter((option) =>
@@ -129,7 +119,6 @@ function CustomSearchSelect({
       <label className="block text-xs font-medium text-slate-700">
         {label}
       </label>
-
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -144,7 +133,6 @@ function CustomSearchSelect({
         <span className="truncate">
           {selectedOption ? selectedOption.label : placeholder}
         </span>
-
         <ChevronDown
           className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform ${
             isOpen ? "rotate-180 text-emerald-600" : ""
@@ -156,16 +144,14 @@ function CustomSearchSelect({
         <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white text-xs shadow-lg">
           <div className="flex items-center gap-1.5 border-b border-slate-100 bg-slate-50 p-1.5">
             <Search className="ml-1 h-3.5 w-3.5 shrink-0 text-slate-400" />
-
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(stripEmojis(e.target.value))}
-              placeholder="Type to filter..."
+              placeholder={t("typeToFilter")}
               autoFocus
               className="w-full bg-transparent text-xs font-normal text-slate-800 outline-none placeholder:text-slate-400"
             />
-
             {search && (
               <button
                 type="button"
@@ -176,12 +162,10 @@ function CustomSearchSelect({
               </button>
             )}
           </div>
-
           <div className="max-h-40 overflow-y-auto py-1">
             {filteredOptions.length > 0 ? (
               filteredOptions.map((option) => {
                 const isSelected = option.value === value;
-
                 return (
                   <button
                     key={option.value}
@@ -198,7 +182,6 @@ function CustomSearchSelect({
                     }`}
                   >
                     <span className="truncate">{option.label}</span>
-
                     {isSelected && (
                       <Check className="ml-1 h-3.5 w-3.5 shrink-0 text-emerald-600" />
                     )}
@@ -207,13 +190,12 @@ function CustomSearchSelect({
               })
             ) : (
               <div className="px-3 py-2 text-center text-xs text-slate-400">
-                No matching results
+                {t("noMatchingResults")}
               </div>
             )}
           </div>
         </div>
       )}
-
       {error && <p className="text-[10px] font-medium text-red-600">{error}</p>}
     </div>
   );
@@ -251,7 +233,7 @@ export function PostPropertyPage() {
       providerType: user?.providerType || "OWNER",
       region: "Addis Ababa",
       subCity: "Bole",
-      areaName: "Bole Atlas",
+      areaName: "",
       priceETB: 5000000,
       titleEn: "",
       titleAm: "",
@@ -290,77 +272,48 @@ export function PostPropertyPage() {
 
   const isLandCategory = selectedCategory?.includes("LAND");
 
+  // Dynamic Options Translated efficiently
+  const categoryOptions = CATEGORIES.map((cat) => ({
+    value: cat,
+    label: t(cat) || cat,
+  }));
+
   const subCityOptions = ADDIS_ABABA_SUBCITIES.map((subCity) => ({
     value: subCity,
     label: subCity,
   }));
 
-  /**
-   * Location search selection
-   *
-   * Priority:
-   * 1. Use subCity directly from AddisPlace if available.
-   * 2. Otherwise detect it from the place name/address.
-   */
   const handleAddisPlaceSelect = (place: AddisPlace) => {
     setValue("areaName", stripEmojis(place.name));
     setValue("latitude", place.lat);
     setValue("longitude", place.lon);
 
-    // Prefer the sub-city returned by the location search.
-    const placeWithSubCity = place as AddisPlace & {
-      subCity?: string;
-    };
-
+    const placeWithSubCity = place as AddisPlace & { subCity?: string };
     if (placeWithSubCity.subCity) {
       setValue("subCity", placeWithSubCity.subCity);
       return;
     }
 
-    // Fallback: detect sub-city from the location information.
     const locationText = [place.name, place.subcityOrStreet]
       .filter(Boolean)
       .join(" ");
-
     const detectedSubCity = detectAddisSubCity(locationText);
-
-    if (detectedSubCity) {
-      setValue("subCity", detectedSubCity);
-    }
+    if (detectedSubCity) setValue("subCity", detectedSubCity);
   };
 
-  /**
-   * Map pin selection
-   *
-   * Coordinates are reverse-geocoded to determine:
-   * - Area / landmark
-   * - Sub-city
-   */
   const handleMapLocationSelect = async (lat: number, lng: number) => {
     setValue("latitude", lat);
     setValue("longitude", lng);
-
     try {
       const geo = await reverseGeocodeAddis(lat, lng);
-
-      // Auto-populate area name from reverse geocoding.
-      if (
-        geo.name &&
-        (!selectedAreaName || selectedAreaName === "Bole Atlas")
-      ) {
+      if (geo.name && !selectedAreaName) {
         setValue("areaName", stripEmojis(geo.name));
       }
-
-      // Auto-populate sub-city from reverse geocoding.
       if (geo.subCity) {
         setValue("subCity", geo.subCity);
       } else if (geo.name) {
-        // Final fallback: detect sub-city from returned place name.
         const detectedSubCity = detectAddisSubCity(geo.name);
-
-        if (detectedSubCity) {
-          setValue("subCity", detectedSubCity);
-        }
+        if (detectedSubCity) setValue("subCity", detectedSubCity);
       }
     } catch (error) {
       console.error("Reverse geocoding failed:", error);
@@ -369,28 +322,23 @@ export function PostPropertyPage() {
 
   const handleAddHashtag = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-
     const cleanTag = stripEmojis(tagInput.replace(/#/g, "")).trim();
-
     if (!cleanTag) return;
-
     if (!selectedAmenities.includes(cleanTag)) {
       setValue("amenities", [...selectedAmenities, cleanTag]);
     }
-
     setTagInput("");
   };
 
   const removeHashtag = (tagToRemove: string) => {
     setValue(
       "amenities",
-      selectedAmenities.filter((amenity: string) => amenity !== tagToRemove),
+      selectedAmenities.filter((a: string) => a !== tagToRemove),
     );
   };
 
   const handleGenerateAiAd = async (promptToUse?: string) => {
     const textPrompt = stripEmojis(promptToUse || aiPrompt);
-
     if (!textPrompt || textPrompt.trim().length < 5) return;
 
     setIsAiGenerating(true);
@@ -398,16 +346,11 @@ export function PostPropertyPage() {
     setAiGeneratedSuccess(false);
 
     try {
-      const result = await generateAiAd(
-        textPrompt,
-        currentLanguage === "AM" ? "AM" : "EN",
-      );
-
+      const result = await generateAiAd(textPrompt, currentLanguage);
       setValue("titleEn", stripEmojis(result.titleEn));
       setValue("titleAm", stripEmojis(result.titleAm));
       setValue("descriptionEn", stripEmojis(result.descriptionEn));
       setValue("descriptionAm", stripEmojis(result.descriptionAm));
-
       setValue("category", result.category);
       setValue("purpose", result.purpose);
       setValue("priceETB", result.priceETB);
@@ -415,47 +358,21 @@ export function PostPropertyPage() {
 
       if (result.areaName) {
         const areaName = stripEmojis(result.areaName);
-
         setValue("areaName", areaName);
-
         const detectedSubCity = detectAddisSubCity(areaName);
-
-        if (detectedSubCity) {
-          setValue("subCity", detectedSubCity);
-        }
+        if (detectedSubCity) setValue("subCity", detectedSubCity);
       }
-
-      if (result.subCity) {
-        setValue("subCity", result.subCity);
-      }
-
-      if (result.bedrooms) {
-        setValue("bedrooms", result.bedrooms);
-      }
-
-      if (result.bathrooms) {
-        setValue("bathrooms", result.bathrooms);
-      }
-
-      if (result.areaSqMeters) {
-        setValue("areaSqMeters", result.areaSqMeters);
-      }
-
-      if (result.isFurnished !== undefined) {
+      if (result.subCity) setValue("subCity", result.subCity);
+      if (result.bedrooms) setValue("bedrooms", result.bedrooms);
+      if (result.bathrooms) setValue("bathrooms", result.bathrooms);
+      if (result.areaSqMeters) setValue("areaSqMeters", result.areaSqMeters);
+      if (result.isFurnished !== undefined)
         setValue("isFurnished", result.isFurnished);
-      }
-
-      if (result.amenities) {
-        setValue("amenities", result.amenities);
-      }
+      if (result.amenities) setValue("amenities", result.amenities);
 
       setAiGeneratedSuccess(true);
     } catch (error) {
-      console.error("AI generation failed:", error);
-
-      setSubmitError(
-        "AI generation failed. Please review your prompt or enter the details manually.",
-      );
+      setSubmitError(t("aiFailed"));
     } finally {
       setIsAiGenerating(false);
     }
@@ -463,26 +380,17 @@ export function PostPropertyPage() {
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-
     const newFiles = Array.from(e.target.files);
-
     const combinedFiles = [...selectedPhotos, ...newFiles].slice(0, 5);
-
     setSelectedPhotos(combinedFiles);
-
     const newPreviews = combinedFiles.map((file) => URL.createObjectURL(file));
-
     setPhotoPreviews(newPreviews);
-
-    // Allow selecting the same file again later.
     e.target.value = "";
   };
 
   const removePhoto = (index: number) => {
     const updatedFiles = selectedPhotos.filter((_, i) => i !== index);
-
     const updatedPreviews = photoPreviews.filter((_, i) => i !== index);
-
     setSelectedPhotos(updatedFiles);
     setPhotoPreviews(updatedPreviews);
   };
@@ -494,31 +402,23 @@ export function PostPropertyPage() {
     try {
       const payload: CreatePropertyInput = {
         ...data,
-
         region: "Addis Ababa",
-
         titleEn: stripEmojis(data.titleEn),
         titleAm: stripEmojis(data.titleAm),
-
         descriptionEn: stripEmojis(data.descriptionEn),
         descriptionAm: stripEmojis(data.descriptionAm),
-
-        areaName: stripEmojis(data.areaName || "Bole Atlas"),
-
+        areaName: stripEmojis(data.areaName || "Addis Ababa"),
         priceETB: Number(data.priceETB),
-
         bedrooms: isLandCategory
           ? undefined
           : data.bedrooms
             ? Number(data.bedrooms)
             : undefined,
-
         bathrooms: isLandCategory
           ? undefined
           : data.bathrooms
             ? Number(data.bathrooms)
             : undefined,
-
         areaSqMeters: data.areaSqMeters ? Number(data.areaSqMeters) : undefined,
       };
 
@@ -526,22 +426,13 @@ export function PostPropertyPage() {
 
       if (selectedPhotos.length > 0) {
         const formData = new FormData();
-
-        selectedPhotos.forEach((file) => {
-          formData.append("photos", file);
-        });
-
+        selectedPhotos.forEach((file) => formData.append("photos", file));
         await uploadPropertyImages(property.id, formData);
       }
 
       navigate("/profile");
     } catch (error: any) {
-      console.error("Create property failed:", error);
-
-      setSubmitError(
-        error?.response?.data?.message ||
-          "Failed to create property listing draft.",
-      );
+      setSubmitError(error?.response?.data?.message || t("submitFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -553,47 +444,32 @@ export function PostPropertyPage() {
       url,
       isMain: index === 0,
     }));
-
     return {
       id: "live_preview",
-
-      titleEn: selectedTitleEn || "Property Title in English",
-
-      titleAm: selectedTitleAm || "የቤት ርዕስ በአማርኛ",
-
-      descriptionEn: selectedDescEn || "Description will appear here...",
-
-      descriptionAm: selectedDescAm || "ዝርዝር መረጃ እዚህ ይወጣል...",
-
+      titleEn: selectedTitleEn || t("previewTitleEn"),
+      titleAm: selectedTitleAm || t("previewTitleAm"),
+      descriptionEn: selectedDescEn || t("previewDescEn"),
+      descriptionAm: selectedDescAm || t("previewDescAm"),
       category: selectedCategory,
       purpose: selectedPurpose,
       priceETB: selectedPriceETB || 0,
-
       areaSqMeters: selectedAreaSqMeters,
       bedrooms: selectedBedrooms,
       bathrooms: selectedBathrooms,
-
       isFurnished: selectedIsFurnished,
       condition: selectedCondition,
-
       amenities: selectedAmenities,
-
       region: "Addis Ababa",
       subCity: selectedSubCity,
-      areaName: selectedAreaName || "Bole Atlas",
-
+      areaName: selectedAreaName || t("addisAbaba"),
       latitude: selectedLatitude,
       longitude: selectedLongitude,
-
       providerType: selectedProviderType,
-
       viewsCount: 0,
-
       images: mockImages,
-
       provider: {
-        firstName: user?.firstName || "Valued",
-        lastName: user?.lastName || "User",
+        firstName: user?.firstName || t("valued"),
+        lastName: user?.lastName || t("user"),
         username: user?.username || "user",
         phoneNumber: user?.phoneNumber || "+251...",
       },
@@ -619,6 +495,7 @@ export function PostPropertyPage() {
     selectedProviderType,
     photoPreviews,
     user,
+    t,
   ]);
 
   return (
@@ -629,18 +506,15 @@ export function PostPropertyPage() {
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
             <PlusCircle className="h-4 w-4" />
           </div>
-
           <h2 className="text-xs font-semibold text-slate-800">
             {t("navPost")}
           </h2>
         </div>
-
         <span className="rounded-full border border-emerald-100/60 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700">
-          {FLAT_PUBLICATION_FEE} ETB Fee
+          {FLAT_PUBLICATION_FEE} ETB {t("publicationFee")}
         </span>
       </div>
 
-      {/* Error */}
       {submitError && (
         <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs font-normal text-red-700">
           <AlertTriangle className="h-4 w-4 shrink-0 text-red-500" />
@@ -653,31 +527,25 @@ export function PostPropertyPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-emerald-400" />
-
             <span className="text-xs font-bold tracking-tight">
-              Smart AI Ad Copywriter
+              {t("aiTitle")}
             </span>
           </div>
-
           <span className="rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
-            Addis Ababa
+            {t("addisAbaba")}
           </span>
         </div>
-
         <p className="text-[11px] font-normal leading-relaxed text-slate-300">
-          Type property requirements naturally. The AI auto-detects sub-city,
-          furnished state, and auto-populates structured bilingual fields.
+          {t("aiDesc")}
         </p>
-
         <div className="space-y-2">
           <textarea
             rows={2}
             value={aiPrompt}
             onChange={(e) => setAiPrompt(stripEmojis(e.target.value))}
-            placeholder="E.g., 3 bedroom furnished apartment in Bole Atlas for rent 80k ETB with generator & water tank..."
+            placeholder={t("aiPlaceholder")}
             className="w-full resize-none rounded-xl border border-white/20 bg-white/10 p-2.5 text-xs font-normal text-white outline-none placeholder:text-slate-400 focus:border-emerald-400"
           />
-
           <div className="scrollbar-none flex gap-1.5 overflow-x-auto pb-1">
             {EXAMPLE_PROMPTS.map((example, index) => (
               <button
@@ -693,7 +561,6 @@ export function PostPropertyPage() {
               </button>
             ))}
           </div>
-
           <button
             type="button"
             onClick={() => handleGenerateAiAd()}
@@ -703,20 +570,19 @@ export function PostPropertyPage() {
             {isAiGenerating ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span>Generating Ad...</span>
+                <span>{t("generatingAd")}</span>
               </>
             ) : (
               <>
                 <Wand2 className="h-3.5 w-3.5" />
-                <span>Auto-Generate Ad Fields</span>
+                <span>{t("generateAdBtn")}</span>
               </>
             )}
           </button>
-
           {aiGeneratedSuccess && (
             <div className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-300">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              AI generated successfully. Review the fields below.
+              {t("aiSuccess")}
             </div>
           )}
         </div>
@@ -726,14 +592,12 @@ export function PostPropertyPage() {
         {/* Purpose */}
         <div className="space-y-1.5">
           <label className="block text-xs font-medium text-slate-700">
-            Listing Purpose *
+            {t("listingPurposeLabel")}
           </label>
-
           <div className="scrollbar-none flex gap-1.5 overflow-x-auto pb-1">
-            {PURPOSE_OPTIONS.map((item) => {
+            {PURPOSES.map((item) => {
               const Icon = item.icon;
               const isSelected = selectedPurpose === item.id;
-
               return (
                 <button
                   key={item.id}
@@ -746,12 +610,9 @@ export function PostPropertyPage() {
                   }`}
                 >
                   <Icon
-                    className={`h-3.5 w-3.5 ${
-                      isSelected ? "text-white" : "text-slate-400"
-                    }`}
+                    className={`h-3.5 w-3.5 ${isSelected ? "text-white" : "text-slate-400"}`}
                   />
-
-                  <span>{item.label}</span>
+                  <span>{t(item.id)}</span>
                 </button>
               );
             })}
@@ -760,36 +621,34 @@ export function PostPropertyPage() {
 
         {/* Category */}
         <CustomSearchSelect
-          label="Property Category *"
-          options={CATEGORY_OPTIONS}
+          label={t("propertyCategoryLabel")}
+          options={categoryOptions}
           value={selectedCategory}
           onChange={(value) => setValue("category", value)}
-          placeholder="Select Category..."
+          placeholder={t("selectCategory")}
           error={errors.category?.message as string}
         />
 
         {/* Provider */}
         <div className="space-y-1.5">
           <label className="block text-xs font-medium text-slate-700">
-            Your Listing Provider Type *
+            {t("providerTypeLabel")}
           </label>
-
           <div className="scrollbar-none flex gap-1.5 overflow-x-auto pb-1">
-            {PROVIDER_OPTIONS.map((item) => {
-              const isSelected = selectedProviderType === item.id;
-
+            {PROVIDERS.map((pid) => {
+              const isSelected = selectedProviderType === pid;
               return (
                 <button
-                  key={item.id}
+                  key={pid}
                   type="button"
-                  onClick={() => setValue("providerType", item.id)}
+                  onClick={() => setValue("providerType", pid)}
                   className={`shrink-0 whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
                     isSelected
                       ? "border-emerald-600 bg-emerald-50 font-semibold text-emerald-900 ring-1 ring-emerald-600"
                       : "border-slate-200 bg-slate-50/80 text-slate-600 hover:bg-slate-100"
                   }`}
                 >
-                  {item.label}
+                  {t(pid)}
                 </button>
               );
             })}
@@ -800,14 +659,12 @@ export function PostPropertyPage() {
         <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
           <div className="flex items-center justify-between">
             <label className="block text-xs font-medium text-slate-700">
-              Property Photos ({selectedPhotos.length}/5)
+              {t("propertyPhotos")} ({selectedPhotos.length}/5)
             </label>
-
             <span className="text-[10px] font-normal text-slate-400">
-              JPEG, PNG, WebP
+              {t("photoFormats")}
             </span>
           </div>
-
           <input
             type="file"
             ref={fileInputRef}
@@ -816,7 +673,6 @@ export function PostPropertyPage() {
             onChange={handlePhotoSelect}
             className="hidden"
           />
-
           <div className="grid grid-cols-5 gap-1.5 pt-1">
             {photoPreviews.map((url, index) => (
               <div
@@ -828,7 +684,6 @@ export function PostPropertyPage() {
                   alt={`Preview ${index + 1}`}
                   className="h-full w-full object-cover"
                 />
-
                 <button
                   type="button"
                   onClick={() => removePhoto(index)}
@@ -836,15 +691,13 @@ export function PostPropertyPage() {
                 >
                   <X className="h-2.5 w-2.5" />
                 </button>
-
                 {index === 0 && (
                   <span className="absolute inset-x-0 bottom-0 bg-emerald-600/90 py-0.5 text-center text-[8px] font-bold text-white">
-                    Main
+                    {t("mainPhoto")}
                   </span>
                 )}
               </div>
             ))}
-
             {selectedPhotos.length < 5 && (
               <button
                 type="button"
@@ -852,7 +705,9 @@ export function PostPropertyPage() {
                 className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-white text-slate-400 transition-colors hover:border-emerald-500 hover:text-emerald-600"
               >
                 <Camera className="h-4 w-4" />
-                <span className="mt-0.5 text-[9px] font-medium">Add</span>
+                <span className="mt-0.5 text-[9px] font-medium">
+                  {t("addPhoto")}
+                </span>
               </button>
             )}
           </div>
@@ -862,42 +717,35 @@ export function PostPropertyPage() {
         <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-700">
-              Property Title (English) *
+              {t("titleEnLabel")}
             </label>
-
             <input
               type="text"
               {...register("titleEn")}
               onChange={(e) => setValue("titleEn", stripEmojis(e.target.value))}
-              placeholder="E.g., Modern 3 Bedroom Apartment in Bole Atlas"
+              placeholder={t("titleEnPlaceholder")}
               className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-normal outline-none focus:border-emerald-500"
             />
           </div>
-
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-700">
-              Property Title (Amharic) *
+              {t("titleAmLabel")}
             </label>
-
             <input
               type="text"
               {...register("titleAm")}
               onChange={(e) => setValue("titleAm", stripEmojis(e.target.value))}
-              placeholder="ምሳሌ፦ በቦሌ አትላስ ዘመናዊ የ 3 መኝታ አፓርትመንት"
+              placeholder={t("titleAmPlaceholder")}
               className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-normal outline-none focus:border-emerald-500"
             />
           </div>
-
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-700">
-              Price (ETB) *
+              {t("priceLabel")}
             </label>
-
             <input
               type="number"
-              {...register("priceETB", {
-                valueAsNumber: true,
-              })}
+              {...register("priceETB", { valueAsNumber: true })}
               className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-emerald-700 outline-none focus:border-emerald-500"
             />
           </div>
@@ -909,42 +757,31 @@ export function PostPropertyPage() {
             <div className="flex gap-2">
               <div className="flex-1">
                 <label className="mb-1 block text-[11px] font-medium text-slate-600">
-                  Bedrooms
+                  {t("beds")}
                 </label>
-
                 <input
                   type="number"
-                  {...register("bedrooms", {
-                    valueAsNumber: true,
-                  })}
+                  {...register("bedrooms", { valueAsNumber: true })}
                   className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-xs font-semibold outline-none focus:border-emerald-500"
                 />
               </div>
-
               <div className="flex-1">
                 <label className="mb-1 block text-[11px] font-medium text-slate-600">
-                  Bathrooms
+                  {t("baths")}
                 </label>
-
                 <input
                   type="number"
-                  {...register("bathrooms", {
-                    valueAsNumber: true,
-                  })}
+                  {...register("bathrooms", { valueAsNumber: true })}
                   className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-xs font-semibold outline-none focus:border-emerald-500"
                 />
               </div>
-
               <div className="flex-1">
                 <label className="mb-1 block text-[11px] font-medium text-slate-600">
-                  Area (m²)
+                  {t("sqm")}
                 </label>
-
                 <input
                   type="number"
-                  {...register("areaSqMeters", {
-                    valueAsNumber: true,
-                  })}
+                  {...register("areaSqMeters", { valueAsNumber: true })}
                   className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-xs font-semibold outline-none focus:border-emerald-500"
                 />
               </div>
@@ -953,20 +790,15 @@ export function PostPropertyPage() {
             {/* Furnished */}
             <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2">
               <span className="text-xs font-medium text-slate-700">
-                Is Furnished?
+                {t("isFurnishedLabel")}
               </span>
-
               <button
                 type="button"
                 onClick={() => setValue("isFurnished", !selectedIsFurnished)}
-                className={`relative h-5 w-9 rounded-full transition-colors ${
-                  selectedIsFurnished ? "bg-emerald-600" : "bg-slate-300"
-                }`}
+                className={`relative h-5 w-9 rounded-full transition-colors ${selectedIsFurnished ? "bg-emerald-600" : "bg-slate-300"}`}
               >
                 <span
-                  className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white transition-transform ${
-                    selectedIsFurnished ? "right-0.5" : "left-0.5"
-                  }`}
+                  className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white transition-transform ${selectedIsFurnished ? "right-0.5" : "left-0.5"}`}
                 />
               </button>
             </div>
@@ -974,13 +806,11 @@ export function PostPropertyPage() {
             {/* Amenities */}
             <div className="space-y-1.5">
               <label className="block text-xs font-medium text-slate-700">
-                Amenities & Features (#Hashtags)
+                {t("amenitiesLabel")}
               </label>
-
               <div className="flex gap-1.5">
                 <div className="relative flex-1">
                   <Hash className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-
                   <input
                     type="text"
                     value={tagInput}
@@ -991,20 +821,18 @@ export function PostPropertyPage() {
                         handleAddHashtag();
                       }
                     }}
-                    placeholder="Type hashtag e.g. Generator, CCTV..."
+                    placeholder={t("amenitiesPlaceholder")}
                     className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2 text-xs font-medium outline-none focus:border-emerald-500"
                   />
                 </div>
-
                 <button
                   type="button"
                   onClick={() => handleAddHashtag()}
                   className="h-8 rounded-lg bg-slate-200 px-3 text-xs font-bold text-slate-800 transition-colors hover:bg-slate-300"
                 >
-                  + Add
+                  {t("addBtn")}
                 </button>
               </div>
-
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {selectedAmenities.map((tag: string) => (
                   <span
@@ -1012,7 +840,6 @@ export function PostPropertyPage() {
                     className="flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-800"
                   >
                     <span>#{tag}</span>
-
                     <button
                       type="button"
                       onClick={() => removeHashtag(tag)}
@@ -1031,32 +858,29 @@ export function PostPropertyPage() {
         <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-700">
-              Description (English) *
+              {t("descEnLabel")}
             </label>
-
             <textarea
               rows={2}
               {...register("descriptionEn")}
               onChange={(e) =>
                 setValue("descriptionEn", stripEmojis(e.target.value))
               }
-              placeholder="Landmark, condition, utilities details..."
+              placeholder={t("descEnPlaceholder")}
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-normal outline-none focus:border-emerald-500"
             />
           </div>
-
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-700">
-              Description (Amharic) *
+              {t("descAmLabel")}
             </label>
-
             <textarea
               rows={2}
               {...register("descriptionAm")}
               onChange={(e) =>
                 setValue("descriptionAm", stripEmojis(e.target.value))
               }
-              placeholder="ስለ ንብረቱ ዝርዝር መረጃ ያስገቡ..."
+              placeholder={t("descAmPlaceholder")}
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-normal outline-none focus:border-emerald-500"
             />
           </div>
@@ -1066,23 +890,20 @@ export function PostPropertyPage() {
         <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
           <div className="space-y-1">
             <label className="block text-xs font-medium text-slate-700">
-              Property Location / Landmark Search (Addis Ababa) *
+              {t("locationSearchLabel")}
             </label>
-
             <AddisLocationSearch
               value={selectedAreaName}
               onSelect={handleAddisPlaceSelect}
             />
           </div>
-
           <CustomSearchSelect
-            label="Sub-city (Addis Ababa)"
+            label={t("subCityLabel")}
             options={subCityOptions}
             value={selectedSubCity}
             onChange={(value) => setValue("subCity", value)}
-            placeholder="Select Sub-city..."
+            placeholder={t("selectSubCity")}
           />
-
           <LocationPickerMap
             initialLat={selectedLatitude || 9.0192}
             initialLng={selectedLongitude || 38.7525}
@@ -1095,14 +916,12 @@ export function PostPropertyPage() {
           <div className="flex items-center justify-between px-1">
             <span className="flex items-center gap-1.5 text-xs font-extrabold text-slate-900">
               <Eye className="h-4 w-4 text-emerald-600" />
-              <span>Live Post Feed Preview</span>
+              <span>{t("livePreview")}</span>
             </span>
-
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-              Real-time Preview
+              {t("realTime")}
             </span>
           </div>
-
           <div className="overflow-hidden rounded-2xl border-2 border-emerald-500/30 bg-white shadow-sm">
             <SocialFeedPost
               property={livePreviewProperty}
@@ -1115,17 +934,14 @@ export function PostPropertyPage() {
         <div className="space-y-1 rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-emerald-950">
-              Publication Fee
+              {t("publicationFee")}
             </span>
-
             <span className="text-xs font-bold text-emerald-700">
               {FLAT_PUBLICATION_FEE} ETB
             </span>
           </div>
-
           <p className="text-[10px] font-normal leading-normal text-emerald-800">
-            Submitting creates a draft in your portfolio with your uploaded
-            photos attached.
+            {t("draftWarning")}
           </p>
         </div>
 
@@ -1138,13 +954,13 @@ export function PostPropertyPage() {
           {isSubmitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Uploading & Creating Draft...</span>
+              <span>{t("uploadingDraft")}</span>
             </>
           ) : (
             <>
               <CheckCircle2 className="h-4 w-4" />
               <span>
-                Approve & Create Draft ({selectedPhotos.length} photos)
+                {t("approveDraft")} ({selectedPhotos.length} {t("photos")})
               </span>
             </>
           )}

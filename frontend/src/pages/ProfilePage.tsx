@@ -21,16 +21,8 @@ import {
   HelpCircle,
 } from "lucide-react";
 
-const PROVIDER_ROLES: Array<{ id: ProviderType; label: string }> = [
-  { id: "OWNER", label: "Property Owner" },
-  { id: "BROKER", label: "Broker / Delala" },
-  { id: "AGENT", label: "Real Estate Agent" },
-  { id: "AGENCY", label: "Agency" },
-  { id: "DEVELOPER", label: "Developer" },
-];
-
 export function ProfilePage() {
-  const { t, currentLanguage } = useTranslation();
+  const { t, currentLanguage, translateProviderType } = useTranslation();
   const { user, updateLanguage, updateProviderType, logout } = useAuthStore();
   const favoriteIds = useFavoritesStore((state) => state.favoriteIds);
 
@@ -58,6 +50,14 @@ export function ProfilePage() {
 
   const channelUsername =
     import.meta.env.VITE_TELEGRAM_CHANNEL_USERNAME || "awtarprop";
+
+  const providerRoles: Array<{ id: ProviderType; label: string }> = [
+    { id: "OWNER", label: translateProviderType("OWNER") },
+    { id: "BROKER", label: translateProviderType("BROKER") },
+    { id: "AGENT", label: translateProviderType("AGENT") },
+    { id: "AGENCY", label: translateProviderType("AGENCY") },
+    { id: "DEVELOPER", label: translateProviderType("DEVELOPER") },
+  ];
 
   return (
     <div className="w-full max-w-md mx-auto p-4 pb-28 space-y-5 text-slate-800 relative">
@@ -89,7 +89,7 @@ export function ProfilePage() {
           onClick={() => setShowRoleModal(true)}
           className="text-xs font-semibold px-3 py-1 bg-slate-100 text-slate-700 rounded-full hover:bg-slate-200/80 transition-colors shrink-0"
         >
-          {user?.providerType || "OWNER"}
+          {translateProviderType(user?.providerType || "OWNER")}
         </button>
       </div>
 
@@ -100,7 +100,7 @@ export function ProfilePage() {
             {totalListings}
           </span>
           <span className="text-[11px] font-medium text-slate-400">
-            Listings
+            {t("navHome")}
           </span>
         </div>
         <div className="border-x border-slate-100">
@@ -108,21 +108,23 @@ export function ProfilePage() {
             {totalViews}
           </span>
           <span className="text-[11px] font-medium text-slate-400">
-            Total Views
+            {t("views")}
           </span>
         </div>
         <div>
           <span className="block font-semibold text-slate-900 text-sm">
             {totalSaved}
           </span>
-          <span className="text-[11px] font-medium text-slate-400">Saved</span>
+          <span className="text-[11px] font-medium text-slate-400">
+            {t("saved")}
+          </span>
         </div>
       </div>
 
-      {/* 3. INSET GROUPED SETTINGS LIST (TELEGRAM / APPLE STYLE) */}
+      {/* 3. INSET GROUPED SETTINGS LIST */}
       <div className="space-y-1">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 px-1 block mb-1">
-          Account Settings
+          {t("providerRole")}
         </span>
 
         <div className="divide-y divide-slate-100 bg-white rounded-2xl border border-slate-200/60 overflow-hidden text-xs font-medium">
@@ -133,11 +135,11 @@ export function ProfilePage() {
           >
             <div className="flex items-center gap-2.5 text-slate-700">
               <ShieldCheck className="w-4 h-4 stroke-[2] text-emerald-600 shrink-0" />
-              <span>Listing Provider Role</span>
+              <span>{t("providerRole")}</span>
             </div>
             <div className="flex items-center gap-1 text-slate-400">
               <span className="text-slate-900 font-semibold">
-                {user?.providerType || "OWNER"}
+                {translateProviderType(user?.providerType || "OWNER")}
               </span>
               <ChevronRight className="w-4 h-4 stroke-[2]" />
             </div>
@@ -165,9 +167,9 @@ export function ProfilePage() {
             <div className="flex items-center justify-between p-3.5">
               <div className="flex items-center gap-2.5 text-slate-700">
                 <Phone className="w-4 h-4 stroke-[2] text-emerald-600 shrink-0" />
-                <span>Verified Phone</span>
+                <span>{t("verifiedPhone")}</span>
               </div>
-              <span className="font-semibold text-slate-800 text-slate-600">
+              <span className="font-semibold text-slate-800">
                 {user.phoneNumber}
               </span>
             </div>
@@ -178,7 +180,7 @@ export function ProfilePage() {
       {/* 4. COMMUNITY & SUPPORT GROUP */}
       <div className="space-y-1">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 px-1 block mb-1">
-          Support & Community
+          {t("supportHelp")}
         </span>
 
         <div className="divide-y divide-slate-100 bg-white rounded-2xl border border-slate-200/60 overflow-hidden text-xs font-medium">
@@ -190,7 +192,7 @@ export function ProfilePage() {
           >
             <div className="flex items-center gap-2.5">
               <Send className="w-4 h-4 stroke-[2] text-emerald-600 shrink-0" />
-              <span>Official Telegram Channel</span>
+              <span>{t("officialChannel")}</span>
             </div>
             <ChevronRight className="w-4 h-4 stroke-[2] text-slate-400" />
           </a>
@@ -203,7 +205,7 @@ export function ProfilePage() {
           >
             <div className="flex items-center gap-2.5">
               <HelpCircle className="w-4 h-4 stroke-[2] text-emerald-600 shrink-0" />
-              <span>Support & Assistance</span>
+              <span>{t("supportHelp")}</span>
             </div>
             <ChevronRight className="w-4 h-4 stroke-[2] text-slate-400" />
           </a>
@@ -220,7 +222,7 @@ export function ProfilePage() {
         className="w-full h-10 text-red-600 font-semibold rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-red-50 transition-colors"
       >
         <LogOut className="w-4 h-4 stroke-[2]" />
-        <span>Log Out Session</span>
+        <span>{t("logOut")}</span>
       </button>
 
       {/* PROVIDER ROLE SELECTION MODAL */}
@@ -229,7 +231,7 @@ export function ProfilePage() {
           <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-3 animate-in slide-in-from-bottom duration-200">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="font-semibold text-slate-900 text-sm">
-                Select Provider Role
+                {t("providerRole")}
               </h3>
               <button
                 onClick={() => setShowRoleModal(false)}
@@ -240,7 +242,7 @@ export function ProfilePage() {
             </div>
 
             <div className="space-y-1 pt-1">
-              {PROVIDER_ROLES.map((role) => {
+              {providerRoles.map((role) => {
                 const isSelected = (user?.providerType || "OWNER") === role.id;
                 return (
                   <button
@@ -272,7 +274,7 @@ export function ProfilePage() {
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 stroke-[2] text-red-600" />
                 <h3 className="font-semibold text-slate-900 text-sm">
-                  Log Out Session?
+                  {t("logOutConfirmTitle")}
                 </h3>
               </div>
               <button
@@ -285,8 +287,7 @@ export function ProfilePage() {
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed font-normal">
-              Are you sure you want to log out of AwtarProp? You will need to
-              re-authenticate with Telegram to manage your properties.
+              {t("logOutConfirmText")}
             </p>
 
             <div className="flex gap-2 pt-1">
@@ -295,7 +296,7 @@ export function ProfilePage() {
                 onClick={() => setShowLogoutConfirm(false)}
                 className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-medium rounded-xl text-xs hover:bg-slate-200 transition-colors"
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 type="button"
@@ -305,7 +306,7 @@ export function ProfilePage() {
                 }}
                 className="flex-1 py-2.5 bg-red-600 text-white font-semibold rounded-xl text-xs hover:bg-red-700 active:bg-red-800 transition-colors shadow-xs"
               >
-                Log Out
+                {t("logOut")}
               </button>
             </div>
           </div>

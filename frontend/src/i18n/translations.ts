@@ -8,14 +8,14 @@ export const translations = {
     navPost: "Post Ad",
     navProfile: "Profile",
 
-    // Purposes
-    forSale: "For Sale",
-    forRent: "For Rent",
-    lookingToBuy: "Buy Request",
-    lookingToRent: "Rent Request",
+    // Purposes (Mapped exactly to Backend Enums)
+    FOR_SALE: "For Sale",
+    FOR_RENT: "For Rent",
+    LOOKING_TO_BUY: "Buy Request",
+    LOOKING_TO_RENT: "Rent Request",
     allPurposes: "All Purposes",
 
-    // Categories
+    // Categories (Mapped exactly to Backend Enums)
     allCategories: "All Categories",
     APARTMENT: "Apartment",
     CONDOMINIUM: "Condominium",
@@ -29,7 +29,7 @@ export const translations = {
     COMMERCIAL_LAND: "Commercial Land",
     AGRICULTURAL_LAND: "Agricultural Land",
 
-    // Provider Types
+    // Provider Types (Mapped exactly to Backend Enums)
     OWNER: "Owner",
     BROKER: "Broker / Delala",
     AGENT: "Agent",
@@ -46,6 +46,7 @@ export const translations = {
     views: "views",
     location: "Location",
     features: "Features",
+    addisAbaba: "Addis Ababa",
 
     // Actions
     save: "Save",
@@ -54,7 +55,7 @@ export const translations = {
     chat: "Chat",
     call: "Call",
     share: "Share",
-    more: "... More",
+    more: "More",
     less: "Less",
     exploreMarket: "Explore Market",
     postListing: "Post Listing",
@@ -62,6 +63,7 @@ export const translations = {
     payAndPublish: "Pay & Publish",
     resetAll: "Reset All",
     filterProperties: "Filter Properties",
+    cancel: "Cancel",
 
     // Portfolio & Settings
     myPortfolio: "My Property Portfolio",
@@ -73,7 +75,6 @@ export const translations = {
     logOutConfirmTitle: "Log Out Session?",
     logOutConfirmText:
       "Are you sure you want to log out of AwtarProp? You will need to re-authenticate with Telegram.",
-    cancel: "Cancel",
 
     // States & Prompts
     publicationFee: "Publication Fee",
@@ -84,9 +85,121 @@ export const translations = {
     searchPlaceholder: "Search area, landmark, title...",
     languageSwitch: "Switch Language",
     english: "English",
-    amharic: "አማርኛ",
+    amharic: "Amharic",
+
+    // Authentication
+    authRequiredTitle: "Authentication Required",
+    authRequiredDesc:
+      "Please authenticate with Telegram to access this feature.",
+    authenticateBtn: "Authenticate with Telegram",
     authenticating: "Authenticating with Telegram...",
+
+    // Post Property Page - AI Section
+    aiTitle: "Smart AI Ad Copywriter",
+    aiDesc:
+      "Type property requirements naturally. The AI auto-detects sub-city, furnished state, and auto-populates structured bilingual fields.",
+    aiPlaceholder:
+      "E.g., 3 bedroom furnished apartment in Bole Atlas for rent 80k ETB with generator & water tank...",
+    generatingAd: "Generating Ad...",
+    generateAdBtn: "Auto-Generate Ad Fields",
+    aiSuccess: "AI generated successfully. Review the fields below.",
+    aiFailed:
+      "AI generation failed. Please review your prompt or enter the details manually.",
+
+    // Form Labels
+    listingPurposeLabel: "Listing Purpose *",
+    propertyCategoryLabel: "Property Category *",
+    selectCategory: "Select Category...",
+    providerTypeLabel: "Your Listing Provider Type *",
+    propertyPhotos: "Property Photos",
+    photoFormats: "JPEG, PNG, WebP",
+    mainPhoto: "Main",
+    addPhoto: "Add",
+    titleEnLabel: "Property Title (English) *",
+    titleEnPlaceholder: "E.g., Modern 3 Bedroom Apartment in Bole Atlas",
+    titleAmLabel: "Property Title (Amharic) *",
+    titleAmPlaceholder: "ምሳሌ፦ በቦሌ አትላስ ዘመናዊ የ 3 መኝታ አፓርትመንት",
+    priceLabel: "Price (ETB) *",
+    isFurnishedLabel: "Is Furnished?",
+    amenitiesLabel: "Amenities & Features (#Hashtags)",
+    amenitiesPlaceholder: "Type hashtag e.g. Generator, CCTV...",
+    addBtn: "+ Add",
+    descEnLabel: "Description (English) *",
+    descEnPlaceholder: "Landmark, condition, utilities details...",
+    descAmLabel: "Description (Amharic) *",
+    descAmPlaceholder: "ስለ ንብረቱ ዝርዝር መረጃ ያስገቡ...",
+    locationSearchLabel: "Property Location / Landmark Search (Addis Ababa) *",
+    subCityLabel: "Sub-city (Addis Ababa)",
+    selectSubCity: "Select Sub-city...",
+
+    // Live Preview & Submit
+    livePreview: "Live Post Feed Preview",
+    realTime: "Real-time Preview",
+    draftWarning:
+      "Submitting creates a draft in your portfolio with your uploaded photos attached.",
+    uploadingDraft: "Uploading & Creating Draft...",
+    approveDraft: "Approve & Create Draft",
+    photos: "photos",
+    submitFailed: "Failed to create property listing draft.",
+    previewTitleEn: "Property Title in English",
+    previewTitleAm: "የቤት ርዕስ በአማርኛ",
+    previewDescEn: "Description will appear here...",
+    previewDescAm: "ዝርዝር መረጃ እዚህ ይወጣል...",
+    valued: "Valued",
+    user: "User",
+
+    allSubCities: "All Sub-cities",
+    purposeLabel: "Purpose",
+    loadingFeed: "Loading property feed...",
+    noMatchingResults: "No matching results",
+
+    loadingPortfolio: "Loading portfolio...",
+    noListingsFilter: "No Listings in This Filter",
+    postToManage: "Post a property to manage your listings here.",
+    listingFee: "Listing Fee",
+    ALL: "ALL",
+    PUBLISHED: "PUBLISHED",
+    DRAFT: "DRAFT",
+
+    typeToFilter: "Type to filter...",
+    locationSearchPlaceholder: "Search landmark, area name, or street...",
+    useCurrentLocation: "Use My Current Location",
+    detectGps: "Detect GPS coordinates automatically",
+    useCustomName: "Use",
+    saveCustomName: "Save custom landmark name",
+    searchResults: "Search Results",
+    popularLocations: "Popular Locations",
+    addisAbabaOnly: "Addis Ababa",
+
+    loc_bole_medhanialem: "Bole Medhanialem",
+    desc_bole: "Bole Sub-City, Addis Ababa",
+    loc_meskel_square: "Meskel Square",
+    desc_kirkos: "Kirkos Sub-City, Addis Ababa",
+    loc_mexico_square: "Mexico Square",
+    desc_lideta: "Lideta Sub-City, Addis Ababa",
+    loc_megenagna: "Megenagna (Zefmesh Mall)",
+    desc_yeka: "Yeka Sub-City, Addis Ababa",
+    loc_piazza: "Piazza (Churchill Ave)",
+    desc_arada: "Arada Sub-City, Addis Ababa",
+    loc_cmc_michael: "CMC Michael",
+    desc_yeka_bole: "Yeka / Bole, Addis Ababa",
+    loc_airport: "Bole International Airport (T2)",
+    desc_airport: "Airport Rd, Addis Ababa",
+    loc_sarbet: "Sarbet / Old Airport",
+    desc_nifas_silk: "Nifas Silk-Lafto, Addis Ababa",
+
+    checkoutTitle: "Listing Fee Publication Checkout",
+    closeCheckout: "Close checkout",
+    targetListing: "Target Listing",
+    providerType: "Provider Type",
+    publicationFeeDesc:
+      "One-time fee to publish this listing live to the AwtarProp marketplace feed and Telegram Mini App.",
+    verifyingPublish: "Verifying & Publishing...",
+    confirmPublish: "Confirm & Publish Listing",
+    paymentFailed: "Payment processing failed",
+    directConnect: "Direct Connect Marketplace",
   },
+
   AM: {
     // App & Navigation
     appTitle: "አውታርፕሮፕ",
@@ -97,10 +210,10 @@ export const translations = {
     navProfile: "መገለጫ",
 
     // Purposes
-    forSale: "ለሽያጭ",
-    forRent: "ለኪራይ",
-    lookingToBuy: "ለመግዛት ፈላጊ",
-    lookingToRent: "ለመከራየት ፈላጊ",
+    FOR_SALE: "ለሽያጭ",
+    FOR_RENT: "ለኪራይ",
+    LOOKING_TO_BUY: "ለመግዛት ፈላጊ",
+    LOOKING_TO_RENT: "ለመከራየት ፈላጊ",
     allPurposes: "ሁሉም ፍላጎቶች",
 
     // Categories
@@ -109,12 +222,12 @@ export const translations = {
     CONDOMINIUM: "ኮንዶሚኒየም",
     RESIDENTIAL_HOUSE: "መኖሪያ ቤት / ቪላ",
     STUDIO: "ስቱዲዮ",
-    COMMERCIAL_SPACE: "የንግድ ቦታ / ሱቅ",
+    COMMERCIAL_SPACE: "የንግድ ቦታ",
     OFFICE: "ቢሮ",
     BUILDING: "ሙሉ ህንፃ",
     HOTEL: "ሆቴል",
-    RESIDENTIAL_LAND: "የመኖሪያ ቦታ መሬት",
-    COMMERCIAL_LAND: "የንግድ ቦታ መሬት",
+    RESIDENTIAL_LAND: "የመኖሪያ መሬት",
+    COMMERCIAL_LAND: "የንግድ መሬት",
     AGRICULTURAL_LAND: "የግብርና መሬት",
 
     // Provider Types
@@ -122,18 +235,19 @@ export const translations = {
     BROKER: "ደላላ",
     AGENT: "ወኪል",
     AGENCY: "ኤጀንሲ",
-    DEVELOPER: "አልማሚ",
+    DEVELOPER: "አልሚ",
 
     // Specs & Details
     beds: "መኝታ",
     baths: "መታጠቢያ",
     sqm: "ካሬ ሜትር",
-    furnished: "ከነ እቃው የተሟላ",
+    furnished: "ከነ እቃው",
     unfurnished: "ያለ እቃ",
     condition: "ሁኔታ",
     views: "እይታዎች",
     location: "ቦታ",
     features: "ተጨማሪ ባህሪያት",
+    addisAbaba: "አዲስ አበባ",
 
     // Actions
     save: "አስቀምጥ",
@@ -142,18 +256,19 @@ export const translations = {
     chat: "መልእክት",
     call: "ደውል",
     share: "አጋራ",
-    more: "... የበለጠ",
+    more: "ተጨማሪ",
     less: "ያነሰ",
-    exploreMarket: "ገበያውን ፈልግ",
+    exploreMarket: "ገበያውን ያስሱ",
     postListing: "ማስታወቂያ ለጥፍ",
     createDraft: "ረቂቅ ፍጠር",
     payAndPublish: "ክፈል እና ለጥፍ",
     resetAll: "ሁሉንም መልስ",
-    filterProperties: "ንብረቶችን ያጣሩ",
+    filterProperties: "ንብረቶችን አጣራ",
+    cancel: "ሰርዝ",
 
     // Portfolio & Settings
     myPortfolio: "የእኔ የንብረት ዝርዝር",
-    providerRole: "የአቅራቢነት ድርሻ",
+    providerRole: "የአቅራቢ ዓይነት",
     verifiedPhone: "የተረጋገጠ ስልክ ቁጥር",
     officialChannel: "ኦፊሴላዊ የቴሌግራም ቻናል",
     supportHelp: "እርዳታ እና ድጋፍ",
@@ -161,7 +276,6 @@ export const translations = {
     logOutConfirmTitle: "ከመለያ መውጣት ይፈልጋሉ?",
     logOutConfirmText:
       "እርግጠኛ ነዎት ከአውታርፕሮፕ መለያ መውጣት ይፈልጋሉ? እንደገና ለመግባት በቴሌግራም ማረጋገጥ ይኖርብዎታል።",
-    cancel: "ሰርዝ",
 
     // States & Prompts
     publicationFee: "የማስታወቂያ ክፍያ",
@@ -171,10 +285,119 @@ export const translations = {
       "በማንኛውም ንብረት ላይ የማስቀመጫ ምልክቱን በመጫን በፍጥነት ለማግኘት እዚህ ማስቀመጥ ይችላሉ።",
     searchPlaceholder: "ቦታ፣ ምልክት ወይም ርዕስ ይፈልጉ...",
     languageSwitch: "ቋንቋ ቀይር",
-    english: "English",
+    english: "እንግሊዝኛ",
     amharic: "አማርኛ",
-    authenticating: "በቴሌግራም በመለያ በመግባት ላይ...",
-  },
-};
 
+    // Authentication
+    authRequiredTitle: "ማረጋገጫ ያስፈልጋል",
+    authRequiredDesc: "ይህንን ባህሪ ለመጠቀም በቴሌግራም መለያዎን ያረጋግጡ።",
+    authenticateBtn: "በቴሌግራም ያረጋግጡ",
+    authenticating: "በቴሌግራም በማረጋገጥ ላይ...",
+
+    // Post Property Page - AI Section
+    aiTitle: "ብልጥ የኤአይ ማስታወቂያ ፀሐፊ",
+    aiDesc:
+      "የንብረቱን መረጃ በተፈጥሯዊ ቋንቋ ያስገቡ። ኤአይ ክፍለ-ከተማን እና ሌሎች ዝርዝሮችን በመለየት ፎርሙን በሁለት ቋንቋዎች ይሞላል።",
+    aiPlaceholder:
+      "ምሳሌ፡ 3 መኝታ ቤት ቦሌ አትላስ 80ሺ ብር ለኪራይ፣ ጀነሬተር እና የውሃ ታንከር ያለው...",
+    generatingAd: "ማስታወቂያ በማመንጨት ላይ...",
+    generateAdBtn: "መረጃዎችን በራስ ሰር ሙላ",
+    aiSuccess: "ኤአይ በተሳካ ሁኔታ አስገብቷል። እባክዎ ከታች ያሉትን መረጃዎች ይገምግሙ።",
+    aiFailed: "ኤአይ ማመንጨት አልቻለም። እባክዎ መረጃውን በእጅ ያስገቡ።",
+
+    // Form Labels
+    listingPurposeLabel: "የማስታወቂያው ዓላማ *",
+    propertyCategoryLabel: "የንብረት ዓይነት *",
+    selectCategory: "ዓይነት ይምረጡ...",
+    providerTypeLabel: "የአቅራቢው ዓይነት *",
+    propertyPhotos: "የንብረቱ ፎቶዎች",
+    photoFormats: "JPEG, PNG, WebP",
+    mainPhoto: "ዋና",
+    addPhoto: "ጨምር",
+    titleEnLabel: "የንብረቱ ርዕስ (እንግሊዝኛ) *",
+    titleEnPlaceholder: "E.g., Modern 3 Bedroom Apartment in Bole Atlas",
+    titleAmLabel: "የንብረቱ ርዕስ (አማርኛ) *",
+    titleAmPlaceholder: "ምሳሌ፦ በቦሌ አትላስ ዘመናዊ የ 3 መኝታ አፓርትመንት",
+    priceLabel: "ዋጋ (በብር) *",
+    isFurnishedLabel: "እቃ አለው?",
+    amenitiesLabel: "ተጨማሪ ባህሪያት (#ሀሽታግ)",
+    amenitiesPlaceholder: "ሀሽታግ ያስገቡ ምሳሌ፦ ጀነሬተር, CCTV...",
+    addBtn: "+ ጨምር",
+    descEnLabel: "ዝርዝር መግለጫ (እንግሊዝኛ) *",
+    descEnPlaceholder: "Landmark, condition, utilities details...",
+    descAmLabel: "ዝርዝር መግለጫ (አማርኛ) *",
+    descAmPlaceholder: "ስለ ንብረቱ ዝርዝር መረጃ ያስገቡ...",
+    locationSearchLabel: "የንብረቱ ቦታ / ምልክት ፍለጋ (አዲስ አበባ) *",
+    subCityLabel: "ክፍለ ከተማ (አዲስ አበባ)",
+    selectSubCity: "ክፍለ ከተማ ይምረጡ...",
+
+    // Live Preview & Submit
+    livePreview: "የቀጥታ ገጽታ እይታ",
+    realTime: "በእውነተኛ ጊዜ",
+    draftWarning: "ይህንን ሲያስገቡ ፎቶዎችን አያይዞ በእርስዎ ማህደር ውስጥ ረቂቅ ይፈጥራል።",
+    uploadingDraft: "በመጫን እና ረቂቅ በመፍጠር ላይ...",
+    approveDraft: "አረጋግጥ እና ረቂቅ ፍጠር",
+    photos: "ፎቶዎች",
+    submitFailed: "የንብረት ማስታወቂያ ረቂቅ መፍጠር አልተሳካም።",
+    previewTitleEn: "Property Title in English",
+    previewTitleAm: "የቤት ርዕስ በአማርኛ",
+    previewDescEn: "Description will appear here...",
+    previewDescAm: "ዝርዝር መረጃ እዚህ ይወጣል...",
+    valued: "ክቡር",
+    user: "ተጠቃሚ",
+
+    allSubCities: "ሁሉም ክፍለ ከተሞች",
+    purposeLabel: "ዓላማ",
+    loadingFeed: "የንብረት ዝርዝር በማምጣት ላይ...",
+    noMatchingResults: "ምንም የተገኘ ውጤት የለም",
+
+    loadingPortfolio: "ማህደርዎን በማምጣት ላይ...",
+    noListingsFilter: "በዚህ ማጣሪያ ውስጥ ምንም ንብረት የለም",
+    postToManage: "ንብረቶችዎን ለማስተዳደር ማስታወቂያ ይለጥፉ።",
+    listingFee: "የማስታወቂያ ክፍያ",
+    ALL: "ሁሉም",
+    PUBLISHED: "የታተመ",
+    DRAFT: "ረቂቅ",
+
+    typeToFilter: "ለማጣራት ይፃፉ...",
+    locationSearchPlaceholder: "ቦታ፣ አካባቢ፣ ወይም ጎዳና ይፈልጉ...",
+    useCurrentLocation: "የአሁኑን የጂፒኤስ ቦታዬን ተጠቀም",
+    detectGps: "የጂፒኤስ መጋጠሚያዎችን በራስ-ሰር ይለዩ",
+    useCustomName: "ይህን ተጠቀም",
+    saveCustomName: "የራስዎን የቦታ ስም ያስቀምጡ",
+    searchResults: "የፍለጋ ውጤቶች",
+    popularLocations: "ታዋቂ ቦታዎች",
+    addisAbabaOnly: "አዲስ አበባ",
+
+    loc_bole_medhanialem: "ቦሌ መድኃኒዓለም",
+    desc_bole: "ቦሌ ክፍለ ከተማ፣ አዲስ አበባ",
+    loc_meskel_square: "መስቀል አደባባይ",
+    desc_kirkos: "ቂርቆስ ክፍለ ከተማ፣ አዲስ አበባ",
+    loc_mexico_square: "ሜክሲኮ አደባባይ",
+    desc_lideta: "ልደታ ክፍለ ከተማ፣ አዲስ አበባ",
+    loc_megenagna: "መገናኛ (ዘፍመሽ ሞል)",
+    desc_yeka: "የካ ክፍለ ከተማ፣ አዲስ አበባ",
+    loc_piazza: "ፒያሳ (ቸርችል ጎዳና)",
+    desc_arada: "አራዳ ክፍለ ከተማ፣ አዲስ አበባ",
+    loc_cmc_michael: "ሲኤምሲ ሚካኤል",
+    desc_yeka_bole: "የካ / ቦሌ፣ አዲስ አበባ",
+    loc_airport: "ቦሌ ዓለም አቀፍ አየር ማረፊያ (T2)",
+    desc_airport: "ኤርፖርት መንገድ፣ አዲስ አበባ",
+    loc_sarbet: "ሳርቤት / አሮጌው አየር ማረፊያ",
+    desc_nifas_silk: "ንፋስ ስልክ ላፍቶ፣ አዲስ አበባ",
+
+    checkoutTitle: "የማስታወቂያ ክፍያ ማረጋገጫ",
+    closeCheckout: "ማረጋገጫውን ዝጋ",
+    targetListing: "የሚታተመው ማስታወቂያ",
+    providerType: "የአቅራቢው ዓይነት",
+    publicationFeeDesc:
+      "ይህ ማስታወቂያ በአውታርፕሮፕ ገበያ እና በቴሌግራም ሚኒ አፕ ላይ በቀጥታ እንዲወጣ የሚከፈል የአንድ ጊዜ ክፍያ።",
+    verifyingPublish: "በማረጋገጥ እና በማተም ላይ...",
+    confirmPublish: "አረጋግጥ እና ማስታወቂያውን አትም",
+    paymentFailed: "የክፍያ ሂደት አልተሳካም",
+    directConnect: "የቀጥታ ግንኙነት ገበያ",
+  },
+} as const;
+
+export type Language = keyof typeof translations;
 export type LanguageKey = keyof typeof translations.EN;

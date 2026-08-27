@@ -5,30 +5,29 @@ export function useTranslation() {
   const user = useAuthStore((state) => state.user);
   const lang = user?.preferredLanguage || "EN";
 
-  const t = (key: LanguageKey): string => {
-    return translations[lang]?.[key] || translations.EN[key] || key;
+  const t = (key: LanguageKey | string): string => {
+    // Safely fallback to the raw key if translation doesn't exist
+    return (
+      translations[lang]?.[key as LanguageKey] ||
+      translations.EN[key as LanguageKey] ||
+      key
+    );
   };
 
   const translateCategory = (cat: string): string => {
     if (!cat) return "";
-    return t(cat as LanguageKey) || cat.replace(/_/g, " ");
+    return t(cat) || cat.replace(/_/g, " ");
   };
 
+  // Drastically simplified and type-safe
   const translatePurpose = (purpose: string): string => {
-    switch (purpose) {
-      case "FOR_SALE":
-        return t("forSale");
-      case "FOR_RENT":
-        return t("forRent");
-      case "LOOKING_TO_BUY":
-        return t("lookingToBuy");
-      default:
-        return t("lookingToRent");
-    }
+    if (!purpose) return "";
+    return t(purpose) || purpose.replace(/_/g, " ");
   };
 
   const translateProviderType = (providerType: string): string => {
-    return t(providerType as LanguageKey) || providerType;
+    if (!providerType) return "";
+    return t(providerType) || providerType;
   };
 
   return {

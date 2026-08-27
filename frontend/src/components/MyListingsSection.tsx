@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { fetchMyListings } from "../api/properties.js";
 import { CheckoutModal } from "./CheckoutModal.js";
+import { useTranslation } from "../hooks/useTranslation.js";
+import { type LanguageKey } from "../i18n/translations.js";
 import {
   Building2,
   Eye,
@@ -10,6 +12,7 @@ import {
 } from "lucide-react";
 
 export function MyListingsSection() {
+  const { t, translateCategory } = useTranslation();
   const [myListings, setMyListings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<"ALL" | "PUBLISHED" | "DRAFT">("ALL");
@@ -38,7 +41,7 @@ export function MyListingsSection() {
       <div className="py-6 text-center space-y-2">
         <div className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
         <p className="text-xs text-slate-400 font-medium">
-          Loading portfolio...
+          {t("loadingPortfolio" as LanguageKey) || "Loading portfolio..."}
         </p>
       </div>
     );
@@ -49,7 +52,7 @@ export function MyListingsSection() {
       {/* Portfolio Header & Filter Pills */}
       <div className="flex items-center justify-between px-1">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-          Property Portfolio ({myListings.length})
+          {t("myPortfolio")} ({myListings.length})
         </span>
 
         <div className="flex gap-1 bg-slate-100 p-0.5 rounded-lg text-[10px] font-bold">
@@ -63,7 +66,7 @@ export function MyListingsSection() {
                   : "text-slate-500"
               }`}
             >
-              {tab}
+              {t(tab as LanguageKey) || tab}
             </button>
           ))}
         </div>
@@ -73,10 +76,12 @@ export function MyListingsSection() {
         <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 text-center space-y-1">
           <Building2 className="w-7 h-7 text-slate-300 mx-auto stroke-[1.5]" />
           <p className="text-xs font-semibold text-slate-700">
-            No Listings in This Filter
+            {t("noListingsFilter" as LanguageKey) ||
+              "No Listings in This Filter"}
           </p>
           <p className="text-[11px] text-slate-400">
-            Post a property to manage your listings here.
+            {t("postToManage" as LanguageKey) ||
+              "Post a property to manage your listings here."}
           </p>
         </div>
       ) : (
@@ -116,11 +121,12 @@ export function MyListingsSection() {
                             : "bg-amber-50 text-amber-800"
                         }`}
                       >
-                        {item.publicationStatus}
+                        {t(item.publicationStatus as LanguageKey) ||
+                          item.publicationStatus}
                       </span>
                     </div>
                     <p className="text-[10px] text-slate-400 font-medium">
-                      {item.category?.replace(/_/g, " ")} · {item.region}
+                      {translateCategory(item.category)} · {item.region}
                     </p>
                   </div>
                 </div>
@@ -128,11 +134,16 @@ export function MyListingsSection() {
                 <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1.5 font-medium">
                   <div className="flex items-center gap-1 text-emerald-700 font-semibold">
                     <Tag className="w-3 h-3 text-emerald-600 stroke-[2]" />
-                    <span>Listing Fee: {item.listingFeeETB} ETB</span>
+                    <span>
+                      {t("listingFee" as LanguageKey) || "Listing Fee"}:{" "}
+                      {item.listingFeeETB} ETB
+                    </span>
                   </div>
                   <div className="flex items-center gap-1 text-slate-600">
                     <Eye className="w-3.5 h-3.5 text-slate-400 stroke-[2]" />
-                    <span>{item.viewsCount || 0} views</span>
+                    <span>
+                      {item.viewsCount || 0} {t("views")}
+                    </span>
                   </div>
                 </div>
 
@@ -142,7 +153,9 @@ export function MyListingsSection() {
                     onClick={() => setCheckoutProperty(item)}
                     className="w-full py-2 bg-emerald-600 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 hover:bg-emerald-700 transition-colors shadow-xs"
                   >
-                    <span>Pay & Publish ({item.listingFeeETB} ETB)</span>
+                    <span>
+                      {t("payAndPublish")} ({item.listingFeeETB} ETB)
+                    </span>
                     <ArrowRight className="w-3.5 h-3.5 stroke-[2]" />
                   </button>
                 )}

@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import {
   Search,
   MapPin,
@@ -9,6 +15,8 @@ import {
   Crosshair,
 } from "lucide-react";
 import { findSubCityByCoordinates } from "../utils/addisSubcities.js";
+import { useTranslation } from "../hooks/useTranslation.js";
+import { type LanguageKey } from "../i18n/translations.js";
 
 export interface AddisPlace {
   id: string;
@@ -19,67 +27,68 @@ export interface AddisPlace {
   lon: number;
 }
 
-const POPULAR_ADDIS_LOCATIONS: AddisPlace[] = [
+// Base configuration using translation keys instead of hardcoded English strings
+const POPULAR_ADDIS_LOCATIONS_BASE = [
   {
     id: "p1",
-    name: "Bole Medhanialem",
-    subcityOrStreet: "Bole Sub-City, Addis Ababa",
+    nameKey: "loc_bole_medhanialem",
+    descKey: "desc_bole",
     subCity: "Bole",
     lat: 8.9961,
     lon: 38.7885,
   },
   {
     id: "p2",
-    name: "Meskel Square",
-    subcityOrStreet: "Kirkos Sub-City, Addis Ababa",
+    nameKey: "loc_meskel_square",
+    descKey: "desc_kirkos",
     subCity: "Kirkos",
     lat: 9.0105,
     lon: 38.7618,
   },
   {
     id: "p3",
-    name: "Mexico Square",
-    subcityOrStreet: "Lideta Sub-City, Addis Ababa",
+    nameKey: "loc_mexico_square",
+    descKey: "desc_lideta",
     subCity: "Lideta",
     lat: 9.0125,
     lon: 38.7423,
   },
   {
     id: "p4",
-    name: "Megenagna (Zefmesh Mall)",
-    subcityOrStreet: "Yeka Sub-City, Addis Ababa",
+    nameKey: "loc_megenagna",
+    descKey: "desc_yeka",
     subCity: "Yeka",
     lat: 9.0207,
     lon: 38.8021,
   },
   {
     id: "p5",
-    name: "Piazza (Churchill Ave)",
-    subcityOrStreet: "Arada Sub-City, Addis Ababa",
+    nameKey: "loc_piazza",
+    descKey: "desc_arada",
     subCity: "Arada",
     lat: 9.0345,
     lon: 38.7519,
   },
   {
     id: "p6",
-    name: "CMC Michael",
-    subcityOrStreet: "Yeka / Bole, Addis Ababa",
+    nameKey: "loc_cmc_michael",
+    descKey: "desc_yeka_bole",
     subCity: "Yeka",
     lat: 9.0195,
     lon: 38.8471,
   },
   {
     id: "p7",
-    name: "Bole International Airport (T2)",
-    subcityOrStreet: "Airport Rd, Addis Ababa",
+    nameKey: "loc_airport",
+    descKey: "desc_airport",
     subCity: "Bole",
     lat: 8.9806,
     lon: 38.7994,
   },
   {
     id: "p8",
-    name: "Sarbet / Old Airport",
-    subcityOrStreet: "Nifas Silk-Lafto, Addis Ababa",
+    nameKey: "loc_sarbet",
+    descKey: "desc_nifas_silk",
     subCity: "Nifas Silk-Lafto",
     lat: 9.0001,
     lon: 38.7355,
@@ -93,10 +102,28 @@ interface Props {
 }
 
 export function AddisLocationSearch({
-  placeholder = "Search landmark, area name, or street...",
+  placeholder,
   value = "",
   onSelect,
 }: Props) {
+  const { t } = useTranslation();
+
+  // Dynamically translate the popular locations using the keys in POPULAR_ADDIS_LOCATIONS_BASE
+  const localizedPopularLocations: AddisPlace[] = useMemo(() => {
+    return POPULAR_ADDIS_LOCATIONS_BASE.map((place) => ({
+      id: place.id,
+      name: t(place.nameKey as LanguageKey) || place.nameKey,
+      subcityOrStreet: t(place.descKey as LanguageKey) || place.descKey,
+      subCity: place.subCity,
+      lat: place.lat,
+      lon: place.lon,
+    }));
+  }, [t]);
+
+  // Use the prop placeholder if provided, otherwise dynamically translate the default
+  const resolvedPlaceholder =
+    placeholder || t("locationSearchPlaceholder" as LanguageKey);
+
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<AddisPlace[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -183,9 +210,12 @@ export function AddisLocationSearch({
   }, [query, searchAddis]);
 
   const handleSelect = (place: AddisPlace) => {
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-      window.Telegram.WebApp.HapticFeedback.impactOccurred("medium");
+    // Cast window.Telegram.WebApp to 'any' to bypass missing TypeScript definitions for HapticFeedback
+    const webApp = (window as any).Telegram?.WebApp;
+    if (webApp?.HapticFeedback) {
+      webApp.HapticFeedback.impactOccurred("medium");
     }
+
     setQuery(place.name);
     setIsOpen(false);
     onSelect(place);
@@ -206,7 +236,7 @@ export function AddisLocationSearch({
 
         const currentPlace: AddisPlace = {
           id: `gps_${Date.now()}`,
-          name: query.trim() || "My Current GPS Location",
+          name: query.trim() || t("useCurrentLocation" as LanguageKey),
           subcityOrStreet: `${subCity} Sub-City, Addis Ababa`,
           subCity,
           lat,
@@ -246,7 +276,7 @@ export function AddisLocationSearch({
           value={query}
           onFocus={() => setIsOpen(true)}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           className="w-full bg-transparent text-xs font-bold text-slate-800 placeholder-slate-400 outline-none"
         />
         {isLoading ? (
@@ -281,10 +311,10 @@ export function AddisLocationSearch({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-emerald-900 leading-tight">
-                Use My Current Location
+                {t("useCurrentLocation" as LanguageKey)}
               </p>
               <p className="text-[10px] text-emerald-700 font-medium leading-tight mt-0.5">
-                Detect GPS coordinates automatically
+                {t("detectGps" as LanguageKey)}
               </p>
             </div>
           </button>
@@ -310,10 +340,10 @@ export function AddisLocationSearch({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-slate-800 truncate">
-                  Use "{query.trim()}"
+                  {t("useCustomName" as LanguageKey)} "{query.trim()}"
                 </p>
                 <p className="text-[10px] text-slate-400">
-                  Save custom landmark name
+                  {t("saveCustomName" as LanguageKey)}
                 </p>
               </div>
             </button>
@@ -321,13 +351,15 @@ export function AddisLocationSearch({
 
           <div className="px-4 py-1.5 bg-slate-50 flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
             <span>
-              {query.length >= 2 ? "Search Results" : "Popular Locations"}
+              {query.length >= 2
+                ? t("searchResults" as LanguageKey)
+                : t("popularLocations" as LanguageKey)}
             </span>
-            <span>Addis Ababa</span>
+            <span>{t("addisAbabaOnly" as LanguageKey)}</span>
           </div>
 
           <div className="max-h-60 overflow-y-auto">
-            {(query.length >= 2 ? results : POPULAR_ADDIS_LOCATIONS).map(
+            {(query.length >= 2 ? results : localizedPopularLocations).map(
               (place) => (
                 <button
                   key={place.id}

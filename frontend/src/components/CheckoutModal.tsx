@@ -1,11 +1,8 @@
-import React, { useState } from 'react';
-import { createCheckout, verifyPayment } from '../api/payments.js';
-import {
-  X,
-  ShieldCheck,
-  CheckCircle2,
-  Loader2,
-} from 'lucide-react';
+import React, { useState } from "react";
+import { createCheckout, verifyPayment } from "../api/payments.js";
+import { useTranslation } from "../hooks/useTranslation.js";
+import { type LanguageKey } from "../i18n/translations.js";
+import { X, ShieldCheck, CheckCircle2, Loader2 } from "lucide-react";
 
 export interface CheckoutModalProps {
   property: any;
@@ -18,8 +15,15 @@ export function CheckoutModal({
   onClose,
   onSuccess,
 }: CheckoutModalProps) {
+  const { t, translateProviderType, currentLanguage } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Dynamically show the Amharic or English title based on the user's language setting
+  const title =
+    currentLanguage === "AM"
+      ? property.titleAm || property.titleEn
+      : property.titleEn || property.titleAm;
 
   const handlePublishPayment = async () => {
     setIsProcessing(true);
@@ -33,8 +37,7 @@ export function CheckoutModal({
       onClose();
     } catch (err: any) {
       setError(
-        err.response?.data?.message ||
-          'Payment processing failed'
+        err.response?.data?.message || t("paymentFailed" as LanguageKey),
       );
     } finally {
       setIsProcessing(false);
@@ -48,15 +51,15 @@ export function CheckoutModal({
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-600" />
             <h3 className="font-bold text-slate-900 text-sm">
-              Listing Fee Publication Checkout
+              {t("checkoutTitle" as LanguageKey)}
             </h3>
           </div>
 
           <button
             onClick={onClose}
             disabled={isProcessing}
-            className="p-1 bg-slate-100 text-slate-500 rounded-full disabled:opacity-50"
-            aria-label="Close checkout"
+            className="p-1 bg-slate-100 text-slate-500 rounded-full disabled:opacity-50 transition-colors hover:bg-slate-200"
+            aria-label={t("closeCheckout" as LanguageKey)}
           >
             <X className="w-4 h-4" />
           </button>
@@ -70,32 +73,31 @@ export function CheckoutModal({
 
         <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-1">
           <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
-            Target Listing
+            {t("targetListing" as LanguageKey)}
           </span>
 
           <h4 className="font-bold text-slate-900 text-xs line-clamp-1">
-            {property.titleEn}
+            {title}
           </h4>
 
-          <span className="text-xs text-slate-500 block">
-            Provider Type:{' '}
+          <span className="text-xs text-slate-500 block mt-1">
+            {t("providerType" as LanguageKey)}:{" "}
             <strong className="text-slate-800">
-              {property.providerType}
+              {translateProviderType(property.providerType)}
             </strong>
           </span>
         </div>
 
         <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-2">
           <div className="flex items-center justify-between font-bold text-xs text-emerald-900">
-            <span>Publication Fee</span>
+            <span>{t("publicationFee" as LanguageKey)}</span>
             <span className="text-base font-extrabold text-emerald-600">
               {property.listingFeeETB} ETB
             </span>
           </div>
 
           <p className="text-[10px] text-emerald-700 leading-relaxed">
-            One-time fee to publish this listing live to the
-            AwtarProp marketplace feed and Telegram Mini App.
+            {t("publicationFeeDesc" as LanguageKey)}
           </p>
         </div>
 
@@ -107,13 +109,14 @@ export function CheckoutModal({
           {isProcessing ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Verifying & Publishing...</span>
+              <span>{t("verifyingPublish" as LanguageKey)}</span>
             </>
           ) : (
             <>
               <CheckCircle2 className="w-4 h-4" />
               <span>
-                Confirm & Publish Listing ({property.listingFeeETB} ETB)
+                {t("confirmPublish" as LanguageKey)} ({property.listingFeeETB}{" "}
+                ETB)
               </span>
             </>
           )}
