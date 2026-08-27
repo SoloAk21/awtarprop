@@ -1,11 +1,13 @@
-import { apiClient } from './client.js';
+import { apiClient } from "./client.js";
 
-export async function createCheckout(propertyId: string) {
-  const response = await apiClient.post('/payments/create-checkout', { propertyId });
+export async function initializeChapaCheckout(propertyId: string) {
+  const response = await apiClient.post("/payments/initialize-chapa", {
+    propertyId,
+  });
   return response.data.data;
 }
 
-export async function verifyPayment(transactionId: string) {
-  const response = await apiClient.post('/payments/verify', { transactionId });
+export async function verifyChapaPayment(txRef: string) {
+  const response = await apiClient.post("/payments/verify-chapa", { txRef });
   return response.data.data;
 }

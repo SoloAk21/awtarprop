@@ -1,5 +1,4 @@
 import dns from "dns";
-// Force Node.js native fetch() to prefer IPv4 DNS resolution for Google APIs
 dns.setDefaultResultOrder("ipv4first");
 
 import express, { Express, Request, Response } from "express";
@@ -15,11 +14,12 @@ import { NotFoundError } from "./errors/AppError.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import propertyRoutes from "./modules/property/property.routes.js";
 import paymentRoutes from "./modules/payment/payment.routes.js";
+import { paymentController } from "./modules/payment/payment.controller.js";
 import { ETHIOPIAN_REGIONS } from "@awtarprop/shared";
 
 const app: Express = express();
 
-// Security Middleware with Cloudinary & Tile Map CSP Image Permissions
+// Security Middleware
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -45,6 +45,14 @@ app.use(
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(compression());
+
+// Raw Body Parsing for Cryptographic Chapa Webhook Hash Checks
+app.post(
+  "/api/v1/payments/chapa-webhook",
+  express.raw({ type: "application/json" }),
+  paymentController.handleChapaWebhook,
+);
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
