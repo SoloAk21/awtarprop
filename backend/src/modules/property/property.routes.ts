@@ -35,6 +35,12 @@ router.post(
   propertyController.uploadImages,
 );
 
+router.delete(
+  "/:id/images/:imageId",
+  authenticateJwt,
+  propertyController.deleteImage,
+);
+
 /* Public routes */
 router.get("/", propertyController.getAll);
 router.get("/:id", propertyController.getById);

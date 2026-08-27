@@ -122,6 +122,58 @@ export class PropertyController {
     }
   };
 
+  public deleteImage = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const userId = req.user!.userId;
+      const idParam = req.params.id;
+      const imageIdParam = req.params.imageId;
+
+      const propertyId = Array.isArray(idParam) ? idParam[0] : idParam;
+      const imageId = Array.isArray(imageIdParam)
+        ? imageIdParam[0]
+        : imageIdParam;
+
+      if (!propertyId || !imageId) {
+        throw new BadRequestError("Property ID and Image ID are required");
+      }
+
+      const property = await prisma.propertyListing.findUnique({
+        where: { id: propertyId },
+      });
+
+      if (!property) throw new NotFoundError("Property listing not found");
+      if (property.providerId !== userId)
+        throw new ForbiddenError("Unauthorized");
+
+      const imageRecord = await prisma.propertyImage.findUnique({
+        where: { id: imageId },
+      });
+
+      if (!imageRecord) throw new NotFoundError("Property image not found");
+
+      // Delete from Cloudinary
+      if (imageRecord.publicId && !imageRecord.publicId.startsWith("mock_")) {
+        await cloudinaryService.deleteImage(imageRecord.publicId);
+      }
+
+      // Delete from PostgreSQL
+      await prisma.propertyImage.delete({
+        where: { id: imageId },
+      });
+
+      res.status(200).json({
+        status: "success",
+        message: "Image deleted successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
       res.setHeader(

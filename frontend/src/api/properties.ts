@@ -59,6 +59,13 @@ export async function uploadPropertyImages(
   return response.data.data.images;
 }
 
+export async function deletePropertyImage(propertyId: string, imageId: string) {
+  const response = await apiClient.delete(
+    `/properties/${propertyId}/images/${imageId}`,
+  );
+  return response.data;
+}
+
 export async function fetchMyListings() {
   const response = await apiClient.get("/properties/user/my-listings", {
     params: { _t: Date.now() },
