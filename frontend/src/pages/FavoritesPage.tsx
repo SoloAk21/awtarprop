@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "../hooks/useTranslation.js";
 import { type LanguageKey } from "../i18n/translations.js";
 import { useFavoritesStore } from "../store/useFavoritesStore.js";

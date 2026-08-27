@@ -12,13 +12,6 @@ const createPropertyValidationSchema = z.object({
   body: propertyListingSchema,
 });
 
-const generateAiAdValidationSchema = z.object({
-  body: z.object({
-    prompt: z.string().min(5, "Prompt must be at least 5 characters").max(1000),
-    preferredLanguage: z.enum(["EN", "AM"]).optional(),
-  }),
-});
-
 /* Protected routes before /:id */
 router.get(
   "/user/my-listings",
@@ -33,12 +26,7 @@ router.post(
   propertyController.create,
 );
 
-router.post(
-  "/ai-generate-ad",
-  authenticateJwt,
-  validateRequest(generateAiAdValidationSchema),
-  propertyController.generateAiAd,
-);
+router.put("/:id", authenticateJwt, propertyController.update);
 
 router.post(
   "/:id/images",

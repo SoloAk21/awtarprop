@@ -69,8 +69,69 @@ export class PropertyService {
   }
 
   /**
-   * Deep universal search across purpose, category, providerType, locations, titles, descriptions, and amenities.
+   * Updates an existing property listing in PostgreSQL.
    */
+  public async updateListing(
+    userId: string,
+    propertyId: string,
+    input: Partial<CreatePropertyInput>,
+  ) {
+    const property = await propertyRepository.findById(propertyId);
+    if (!property) throw new NotFoundError("Property listing not found");
+
+    if (property.providerId !== userId) {
+      throw new ForbiddenError(
+        "You are not authorized to edit this property listing",
+      );
+    }
+
+    const updateData: Prisma.PropertyListingUpdateInput = {
+      ...(input.titleEn && { titleEn: input.titleEn }),
+      ...(input.titleAm && { titleAm: input.titleAm }),
+      ...(input.descriptionEn && { descriptionEn: input.descriptionEn }),
+      ...(input.descriptionAm && { descriptionAm: input.descriptionAm }),
+      ...(input.category && { category: input.category as any }),
+      ...(input.purpose && { purpose: input.purpose as any }),
+      ...(input.priceETB && { priceETB: new Prisma.Decimal(input.priceETB) }),
+      ...(input.areaSqMeters !== undefined && {
+        areaSqMeters: input.areaSqMeters
+          ? new Prisma.Decimal(input.areaSqMeters)
+          : null,
+      }),
+      ...(input.bedrooms !== undefined && { bedrooms: input.bedrooms }),
+      ...(input.bathrooms !== undefined && { bathrooms: input.bathrooms }),
+      ...(input.floors !== undefined && { floors: input.floors }),
+      ...(input.condition && { condition: input.condition as any }),
+      ...(input.isFurnished !== undefined && {
+        isFurnished: input.isFurnished,
+      }),
+      ...(input.amenities && { amenities: input.amenities }),
+      ...(input.region && { region: input.region }),
+      ...(input.subCity !== undefined && { subCity: input.subCity }),
+      ...(input.areaName && { areaName: input.areaName }),
+      ...(input.latitude !== undefined && { latitude: input.latitude }),
+      ...(input.longitude !== undefined && { longitude: input.longitude }),
+    };
+
+    return prisma.propertyListing.update({
+      where: { id: propertyId },
+      data: updateData,
+      include: {
+        images: { orderBy: { order: "asc" } },
+        provider: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            username: true,
+            phoneNumber: true,
+            providerType: true,
+          },
+        },
+      },
+    });
+  }
+
   public async searchListings(query: {
     category?: string;
     purpose?: string;
@@ -101,7 +162,6 @@ export class PropertyService {
       const term = query.search.trim();
       const termUpper = term.toUpperCase().replace(/\s+/g, "_");
 
-      // Check enum matches
       const matchingPurposes = [
         "FOR_SALE",
         "FOR_RENT",

@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import { propertyService } from "./property.service.js";
-import { aiService } from "../../services/ai.service.js";
 import { cloudinaryService } from "../../services/cloudinary.service.js";
 import { prisma } from "../../config/db.js";
 import {
@@ -23,20 +22,24 @@ export class PropertyController {
     }
   };
 
-  public generateAiAd = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) => {
+  public update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { prompt, preferredLanguage } = req.body;
-      const result = await aiService.generatePropertyAd(
-        prompt,
-        preferredLanguage || "EN",
+      const userId = req.user!.userId;
+      const idParam = req.params.id;
+      const propertyId = Array.isArray(idParam) ? idParam[0] : idParam;
+
+      if (!propertyId) {
+        throw new BadRequestError("Property ID is required");
+      }
+
+      const property = await propertyService.updateListing(
+        userId,
+        propertyId,
+        req.body,
       );
       res.status(200).json({
         status: "success",
-        data: result,
+        data: { property },
       });
     } catch (error) {
       next(error);

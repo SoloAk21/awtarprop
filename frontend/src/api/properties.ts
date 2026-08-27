@@ -20,20 +20,6 @@ export async function fetchProperties(filters: PropertyQueryFilters = {}) {
       _t: Date.now(),
     },
   });
-
-  const rawData = response.data?.data;
-  const firstProp = rawData?.properties?.[0];
-
-  console.log("[api/properties.ts] rawData keys:", Object.keys(rawData || {}));
-  if (firstProp) {
-    console.log(
-      "[api/properties.ts] firstProp.id:",
-      firstProp.id,
-      "firstProp.images:",
-      firstProp.images,
-    );
-  }
-
   return response.data.data;
 }
 
@@ -46,6 +32,14 @@ export async function fetchPropertyById(id: string) {
 
 export async function createPropertyListing(data: CreatePropertyInput) {
   const response = await apiClient.post("/properties", data);
+  return response.data.data.property;
+}
+
+export async function updatePropertyListing(
+  id: string,
+  data: Partial<CreatePropertyInput>,
+) {
+  const response = await apiClient.put(`/properties/${id}`, data);
   return response.data.data.property;
 }
 
