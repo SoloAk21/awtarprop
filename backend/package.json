@@ -4,15 +4,21 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/index.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "postinstall": "prisma generate"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "AwtarProp Backend API Service",
-  "devDependencies": {
+  "dependencies": {
+    "@awtarprop/shared": "file:../shared",
+    "@google/generative-ai": "^0.24.1",
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "@prisma/config": "^7.9.1",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -20,16 +26,6 @@
     "@types/multer": "^2.2.0",
     "@types/node": "^26.2.0",
     "@types/pg": "^8.23.1",
-    "prisma": "^7.9.1",
-    "tsx": "^4.23.12",
-    "typescript": "^7.0.2"
-  },
-  "dependencies": {
-    "@awtarprop/shared": "file:../shared",
-    "@google/generative-ai": "^0.24.1",
-    "@prisma/adapter-pg": "^7.9.1",
-    "@prisma/client": "^7.9.1",
-    "@prisma/config": "^7.9.1",
     "cloudinary": "^2.10.1",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
@@ -40,8 +36,12 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.2.0",
     "pg": "^8.23.0",
+    "prisma": "^7.9.1",
     "sharp": "^0.35.3",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2",
     "winston": "^3.19.0",
     "zod": "^4.4.3"
-  }
+  },
+  "devDependencies": {}
 }
