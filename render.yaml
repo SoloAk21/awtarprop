@@ -1,11 +1,13 @@
 services:
-  # Backend API Service
+  # 1. Express Backend REST API
   - type: web
     name: awtarprop-backend
     env: node
     region: frankfurt
+    plan: free
     buildCommand: npm run build:backend
-    startCommand: npm --prefix backend run start
+    startCommand: npm run start:backend
+    healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_ENV
         value: production
@@ -18,17 +20,22 @@ services:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
 
-  # Telegram Bot Service
+  # 2. Telegram Bot Worker
   - type: worker
     name: awtarprop-bot
     env: node
     region: frankfurt
+    plan: free
     buildCommand: npm run build:bot
-    startCommand: npm --prefix bot run start
+    startCommand: npm run start:bot
     envVars:
       - key: NODE_ENV
         value: production
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: TELEGRAM_WEBAPP_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
         sync: false
