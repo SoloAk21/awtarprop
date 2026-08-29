@@ -2,6 +2,7 @@ import { Telegraf, Markup, Context } from "telegraf";
 import axios, { AxiosError } from "axios";
 import dotenv from "dotenv";
 import path from "path";
+import http from "http";
 
 // ---------------------------------------------------------------------------
 // Environment Configuration
@@ -13,6 +14,7 @@ const token = process.env.TELEGRAM_BOT_TOKEN;
 const webAppUrl = process.env.TELEGRAM_WEBAPP_URL ?? "http://localhost:5173";
 const apiUrl = process.env.VITE_API_URL ?? "http://localhost:5000/api/v1";
 const channelUsername = (process.env.TELEGRAM_CHANNEL_USERNAME ?? "").trim();
+const PORT = process.env.PORT || 3000;
 
 if (!token || token.includes("your_telegram_bot_token")) {
   console.warn(
@@ -154,7 +156,7 @@ async function registerLanguage(
 }
 
 // ---------------------------------------------------------------------------
-// Custom Emoji Language Keyboard
+// Custom Emoji Keyboards
 // ---------------------------------------------------------------------------
 const languageKeyboard = Markup.inlineKeyboard([
   [
@@ -409,8 +411,17 @@ bot.help((ctx) =>
 );
 
 // ---------------------------------------------------------------------------
-// Bot Launch & Automatic Chat Menu Button Synchronization
+// Render HTTP Health Check Server
 // ---------------------------------------------------------------------------
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("AwtarProp Telegram Bot status: OK");
+});
+
+server.listen(PORT, () => {
+  console.log(`🌐 Health check HTTP server listening on port ${PORT}`);
+});
+
 // ---------------------------------------------------------------------------
 // Bot Launch & Automatic Chat Menu Button Synchronization
 // ---------------------------------------------------------------------------
@@ -448,10 +459,12 @@ const launchBotWithRetry = async (retryCount = 0) => {
     }
   }
 };
+
 launchBotWithRetry();
 
 const stop = (signal: string) => {
   console.log(`Received ${signal}. Stopping bot…`);
+  server.close();
   bot.stop(signal);
 };
 
