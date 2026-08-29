@@ -418,7 +418,7 @@ const server = http.createServer((req, res) => {
   res.end("AwtarProp Telegram Bot status: OK");
 });
 
-server.listen(PORT, () => {
+server.listen(Number(PORT), "0.0.0.0", () => {
   console.log(`🌐 Health check HTTP server listening on port ${PORT}`);
 });
 
