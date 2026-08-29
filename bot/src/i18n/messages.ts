@@ -12,7 +12,8 @@ export const MESSAGES = {
       `${PREMIUM_BODY_EMOJIS.PIN} <b>Official Channel Join Required</b>\n\nWelcome ${name}! To access ${AwtarPropBrandName}, please join our official Telegram channel first.`,
     requestPhone: (name: string) =>
       `${PREMIUM_BODY_EMOJIS.WAVE} <b>Welcome ${name}!</b> ${PREMIUM_BODY_EMOJIS.SPARKLES}\n\n${PREMIUM_BODY_EMOJIS.PHONE} Please share your contact phone number below to complete account verification.`,
-    phoneVerified: `${PREMIUM_BODY_EMOJIS.SHIELD} <b>Contact Verification Complete!</b> ${PREMIUM_BODY_EMOJIS.STAR}\n\nYour phone number is securely registered. Tap below to launch the ${AwtarPropBrandName} Mini App.`,
+    phoneVerified: `${PREMIUM_BODY_EMOJIS.SHIELD} <b>Contact Verification Complete!</b> ${PREMIUM_BODY_EMOJIS.STAR}\n\nYour phone number is securely registered.`,
+    launchAppPrompt: `${PREMIUM_BODY_EMOJIS.SPARKLES} Tap below to open the ${AwtarPropBrandName} Marketplace App:`,
     invalidPhoneOwner: `${PREMIUM_BODY_EMOJIS.WARNING} <b>Invalid Contact</b>\n\nPlease share <b>your own contact number</b> using the button below.`,
     channelVerifiedSuccess: `Channel subscription verified!`,
     channelNotJoined: `You haven't joined the official channel yet. Please join and try again.`,
@@ -32,7 +33,7 @@ export const MESSAGES = {
     btnLangAm: "አማርኛ",
     btnChangeLang: "Change Language / ቋንቋ ለመቀየር",
     errorGeneric: `${PREMIUM_BODY_EMOJIS.WARNING} An error occurred. Please try again later.`,
-    processing: `${PREMIUM_BODY_EMOJIS.PROCESSING}Processing...`,
+    processing: "Processing...",
   },
   AM: {
     welcomeNew: (name: string) =>
@@ -43,7 +44,8 @@ export const MESSAGES = {
       `${PREMIUM_BODY_EMOJIS.PIN} <b>የቻናል አባልነት ያስፈልጋል</b>\n\nእንኳን ደህና መጡ ${name}! ገበያውን ለመጠቀም እባክዎን አስቀድመው ይፋዊ ቴሌግራም ቻናላችንን ይቀላቀሉ።`,
     requestPhone: (name: string) =>
       `${PREMIUM_BODY_EMOJIS.WAVE} <b>እንኳን ደህና መጡ ${name}!</b> ${PREMIUM_BODY_EMOJIS.SPARKLES}\n\n${PREMIUM_BODY_EMOJIS.PHONE} እባክዎን ማረጋገጫውን ለማጠናቀቅ የስልክ ቁጥርዎን ያጋሩ።`,
-    phoneVerified: `${PREMIUM_BODY_EMOJIS.SHIELD} <b>የስልክ ቁጥር ማረጋገጫ ተጠናቋል!</b> ${PREMIUM_BODY_EMOJIS.STAR}\n\nየስልክ ቁጥርዎ በደህና ተመዝግቧል። አውታርፕሮፕ ገበያን ለመክፈት ከታች ያለውን ይጫኑ።`,
+    phoneVerified: `${PREMIUM_BODY_EMOJIS.SHIELD} <b>የስልክ ቁጥር ማረጋገጫ ተጠናቋል!</b> ${PREMIUM_BODY_EMOJIS.STAR}\n\nየስልክ ቁጥርዎ በደህና ተመዝግቧል።`,
+    launchAppPrompt: `${PREMIUM_BODY_EMOJIS.SPARKLES} ገበያውን ለመክፈት ከታች ያለውን ይጫኑ:`,
     invalidPhoneOwner: `${PREMIUM_BODY_EMOJIS.WARNING} <b>የተሳሳተ ስልክ ቁጥር</b>\n\nእባክዎን <b>የራስዎን ስልክ ቁጥር</b> ከታች ያለውን ቁልፍ በመጫን ያጋሩ።`,
     channelVerifiedSuccess: `ቻናል ተቀላቅለዋል!`,
     channelNotJoined: `እስካሁን ቻናሉን አልተቀላቀሉም። እባክዎን ተቀላቅለው እንደገና ይሞክሩ።`,

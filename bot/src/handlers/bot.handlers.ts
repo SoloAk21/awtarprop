@@ -8,7 +8,12 @@ import {
   registerPhone,
   verifyChannelSubscription,
 } from "../services/api.service";
-import { buildWebAppUrl, safeDeleteMessage } from "../utils/helpers";
+import {
+  buildWebAppUrl,
+  safeDeleteMessage,
+  safeDeletePreviousBotMessage,
+  sendCleanMessage,
+} from "../utils/helpers";
 import {
   getChannelJoinKeyboard,
   getLanguageKeyboard,
@@ -27,63 +32,103 @@ export function registerBotHandlers() {
     if (!acquireLock(userId)) return;
 
     try {
-      const [isSubscribed, userStatus] = await Promise.all([
-        verifyChannelSubscription(ctx, userId),
-        checkUserDbStatus(userId),
-      ]);
-
+      const isSubscribed = await verifyChannelSubscription(ctx, userId);
+      const userStatus = await checkUserDbStatus(userId);
       const lang = userStatus.preferredLanguage;
 
       if (!isSubscribed) {
-        return await ctx.reply(MESSAGES[lang].channelRequired(firstName), {
-          parse_mode: "HTML",
-          ...getChannelJoinKeyboard(lang),
-        });
+        return await sendCleanMessage(
+          ctx,
+          userId,
+          MESSAGES[lang].channelRequired(firstName),
+          {
+            parse_mode: "HTML",
+            ...getChannelJoinKeyboard(lang),
+          },
+        );
       }
 
       if (userStatus.isPhoneVerified) {
-        return await ctx.reply(MESSAGES[lang].welcomeVerified(firstName), {
-          parse_mode: "HTML",
-          ...Markup.removeKeyboard(),
-          ...getOpenAppKeyboard(targetUrl, lang),
-        });
+        return await sendCleanMessage(
+          ctx,
+          userId,
+          MESSAGES[lang].welcomeVerified(firstName),
+          {
+            parse_mode: "HTML",
+            ...Markup.removeKeyboard(),
+            ...getOpenAppKeyboard(targetUrl, lang),
+          },
+        );
       }
 
-      return await ctx.reply(MESSAGES[lang].welcomeNew(firstName), {
-        parse_mode: "HTML",
-        ...getLanguageKeyboard(lang),
-      });
+      return await sendCleanMessage(
+        ctx,
+        userId,
+        MESSAGES[lang].welcomeNew(firstName),
+        {
+          parse_mode: "HTML",
+          ...getLanguageKeyboard(lang),
+        },
+      );
     } finally {
       releaseLock(userId);
     }
   });
 
-  // 2. Language Command (/language, /lang)
+  // 2. Language Switch Command
   bot.command(["language", "lang"], async (ctx) => {
     const userId = ctx.from!.id;
+
+    const isSubscribed = await verifyChannelSubscription(ctx, userId);
     const userStatus = await checkUserDbStatus(userId);
     const lang = userStatus.preferredLanguage;
 
-    return ctx.reply(MESSAGES[lang].langSelectPrompt, {
+    if (!isSubscribed) {
+      return sendCleanMessage(
+        ctx,
+        userId,
+        MESSAGES[lang].channelRequired(ctx.from!.first_name || "User"),
+        {
+          parse_mode: "HTML",
+          ...getChannelJoinKeyboard(lang),
+        },
+      );
+    }
+
+    return sendCleanMessage(ctx, userId, MESSAGES[lang].langSelectPrompt, {
       parse_mode: "HTML",
       ...getLanguageKeyboard(lang),
     });
   });
 
-  // 3. Help Command (/help)
+  // 3. Help Command
   bot.help(async (ctx) => {
     const userId = ctx.from!.id;
+
+    const isSubscribed = await verifyChannelSubscription(ctx, userId);
     const userStatus = await checkUserDbStatus(userId);
     const lang = userStatus.preferredLanguage;
     const targetUrl = buildWebAppUrl();
 
-    return ctx.reply(MESSAGES[lang].helpText, {
+    if (!isSubscribed) {
+      return sendCleanMessage(
+        ctx,
+        userId,
+        MESSAGES[lang].channelRequired(ctx.from!.first_name || "User"),
+        {
+          parse_mode: "HTML",
+          ...getChannelJoinKeyboard(lang),
+        },
+      );
+    }
+
+    return sendCleanMessage(ctx, userId, MESSAGES[lang].helpText, {
       parse_mode: "HTML",
       ...getOpenAppKeyboard(targetUrl, lang),
     });
   });
 
-  // 4. Language Switch Callback Action
+  // 4. Language Switch Action Handler
   bot.action(/set_lang_(EN|AM)/, async (ctx) => {
     const userId = ctx.from!.id;
     const firstName = ctx.from!.first_name || "User";
@@ -93,15 +138,33 @@ export function registerBotHandlers() {
     await registerLanguage(userId, selectedLang);
     await safeDeleteMessage(ctx);
 
+    const isSubscribed = await verifyChannelSubscription(ctx, userId);
+    if (!isSubscribed) {
+      return sendCleanMessage(
+        ctx,
+        userId,
+        MESSAGES[selectedLang].channelRequired(firstName),
+        {
+          parse_mode: "HTML",
+          ...getChannelJoinKeyboard(selectedLang),
+        },
+      );
+    }
+
     const userStatus = await checkUserDbStatus(userId);
     const targetUrl = buildWebAppUrl();
 
     if (userStatus.isPhoneVerified) {
-      return ctx.reply(MESSAGES[selectedLang].welcomeVerified(firstName), {
-        parse_mode: "HTML",
-        ...Markup.removeKeyboard(),
-        ...getOpenAppKeyboard(targetUrl, selectedLang),
-      });
+      return sendCleanMessage(
+        ctx,
+        userId,
+        MESSAGES[selectedLang].welcomeVerified(firstName),
+        {
+          parse_mode: "HTML",
+          ...Markup.removeKeyboard(),
+          ...getOpenAppKeyboard(targetUrl, selectedLang),
+        },
+      );
     }
 
     return ctx.reply(MESSAGES[selectedLang].requestPhone(firstName), {
@@ -119,7 +182,7 @@ export function registerBotHandlers() {
     await ctx.answerCbQuery();
     await safeDeleteMessage(ctx);
 
-    return ctx.reply(MESSAGES[lang].langSelectPrompt, {
+    return sendCleanMessage(ctx, userId, MESSAGES[lang].langSelectPrompt, {
       parse_mode: "HTML",
       ...getLanguageKeyboard(lang),
     });
@@ -135,10 +198,9 @@ export function registerBotHandlers() {
     }
 
     try {
+      const isSubscribed = await verifyChannelSubscription(ctx, userId);
       const userStatus = await checkUserDbStatus(userId);
       const lang = userStatus.preferredLanguage;
-
-      const isSubscribed = await verifyChannelSubscription(ctx, userId);
 
       if (!isSubscribed) {
         return ctx.answerCbQuery(MESSAGES[lang].channelNotJoined, {
@@ -152,17 +214,27 @@ export function registerBotHandlers() {
       const targetUrl = buildWebAppUrl();
 
       if (userStatus.isPhoneVerified) {
-        return ctx.reply(MESSAGES[lang].welcomeVerified(firstName), {
-          parse_mode: "HTML",
-          ...Markup.removeKeyboard(),
-          ...getOpenAppKeyboard(targetUrl, lang),
-        });
+        return sendCleanMessage(
+          ctx,
+          userId,
+          MESSAGES[lang].welcomeVerified(firstName),
+          {
+            parse_mode: "HTML",
+            ...Markup.removeKeyboard(),
+            ...getOpenAppKeyboard(targetUrl, lang),
+          },
+        );
       }
 
-      return ctx.reply(MESSAGES[lang].welcomeNew(firstName), {
-        parse_mode: "HTML",
-        ...getLanguageKeyboard(lang),
-      });
+      return sendCleanMessage(
+        ctx,
+        userId,
+        MESSAGES[lang].welcomeNew(firstName),
+        {
+          parse_mode: "HTML",
+          ...getLanguageKeyboard(lang),
+        },
+      );
     } finally {
       releaseLock(userId);
     }
@@ -171,11 +243,30 @@ export function registerBotHandlers() {
   // 7. Contact Shared Event Handler
   bot.on("contact", async (ctx) => {
     const userId = ctx.from!.id;
+    const firstName = ctx.from!.first_name || "User";
     const contact = ctx.message.contact;
 
+    const isSubscribed = await verifyChannelSubscription(ctx, userId);
     const userStatus = await checkUserDbStatus(userId);
     const lang = userStatus.preferredLanguage;
 
+    // Check channel subscription live
+    if (!isSubscribed) {
+      await ctx.reply(MESSAGES[lang].channelNotJoined, {
+        ...Markup.removeKeyboard(),
+      });
+      return sendCleanMessage(
+        ctx,
+        userId,
+        MESSAGES[lang].channelRequired(firstName),
+        {
+          parse_mode: "HTML",
+          ...getChannelJoinKeyboard(lang),
+        },
+      );
+    }
+
+    // Validate contact ownership
     if (contact.user_id && contact.user_id !== userId) {
       return ctx.reply(MESSAGES[lang].invalidPhoneOwner, {
         parse_mode: "HTML",
@@ -185,9 +276,15 @@ export function registerBotHandlers() {
     await registerPhone(userId, contact.phone_number);
     const targetUrl = buildWebAppUrl();
 
-    return ctx.reply(MESSAGES[lang].phoneVerified, {
+    // STEP 1: EXPLICITLY send Markup.removeKeyboard() to immediately close the reply contact keyboard
+    await ctx.reply(MESSAGES[lang].phoneVerified, {
       parse_mode: "HTML",
       ...Markup.removeKeyboard(),
+    });
+
+    // STEP 2: Send clean Open App inline launcher
+    return sendCleanMessage(ctx, userId, MESSAGES[lang].launchAppPrompt, {
+      parse_mode: "HTML",
       ...getOpenAppKeyboard(targetUrl, lang),
     });
   });

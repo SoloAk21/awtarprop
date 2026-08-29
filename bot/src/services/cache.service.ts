@@ -4,6 +4,7 @@ export interface UserCacheState {
   isPhoneVerified: boolean;
   preferredLanguage: SupportedLang;
   cachedAt: number;
+  lastBotMessageId?: number;
 }
 
 export const userCache = new Map<number, UserCacheState>();

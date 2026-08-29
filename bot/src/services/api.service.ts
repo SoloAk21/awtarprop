@@ -61,6 +61,7 @@ export async function registerPhone(
       isPhoneVerified: true,
       preferredLanguage: existing?.preferredLanguage || "EN",
       cachedAt: Date.now(),
+      lastBotMessageId: existing?.lastBotMessageId,
     });
   }
 }
@@ -86,6 +87,7 @@ export async function registerLanguage(
       isPhoneVerified: existing?.isPhoneVerified || false,
       preferredLanguage: language,
       cachedAt: Date.now(),
+      lastBotMessageId: existing?.lastBotMessageId,
     });
   }
 }
@@ -100,9 +102,19 @@ export async function verifyChannelSubscription(
       config.channelUsername,
       userId,
     );
-    return ["creator", "administrator", "member", "restricted"].includes(
-      member.status,
-    );
+    const isSubscribed = [
+      "creator",
+      "administrator",
+      "member",
+      "restricted",
+    ].includes(member.status);
+
+    if (!isSubscribed) {
+      // Clear cache if user left the channel so they cannot launch the app
+      userCache.delete(userId);
+    }
+
+    return isSubscribed;
   } catch {
     return true;
   }
