@@ -9,12 +9,13 @@
     "bot"
   ],
   "scripts": {
+    "build": "npm run build:frontend",
     "build:shared": "npm --prefix shared run build",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
     "dev:bot": "npm --prefix bot run dev",
     "build:backend": "npm install --include=dev && npm run build:shared && npm --prefix backend run build",
-    "build:frontend": "npm install --include=dev && npm run build:shared && npm --prefix frontend run build",
+    "build:frontend": "npm run build:shared && npm --prefix frontend run build",
     "build:bot": "npm install --include=dev && npm run build:shared && npm --prefix bot run build",
     "start:backend": "npm --prefix backend run start",
     "start:bot": "npm --prefix bot run start",
