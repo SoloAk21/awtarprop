@@ -11,6 +11,7 @@ import { useAuthStore } from "../store/useAuthStore.js";
 import { useFavoritesStore } from "../store/useFavoritesStore.js";
 import { MultiImageGrid } from "./MultiImageGrid.js";
 import { EditPropertyModal } from "./EditPropertyModal.js";
+import { useViewTracker } from "../hooks/useViewTracker.js";
 import { toast } from "sonner";
 import {
   MapPin,
@@ -104,6 +105,9 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
   const [showEditModal, setShowEditModal] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Attach view tracking ref
+  const viewTrackingRef = useViewTracker(property.id);
 
   const isOwner = useMemo(() => {
     if (!user) return false;
@@ -246,7 +250,10 @@ export const SocialFeedPost = React.memo(function SocialFeedPost({
   );
 
   return (
-    <article className="bg-white border-b border-slate-100 pb-3 mb-2 relative">
+    <article
+      ref={viewTrackingRef as React.RefObject<HTMLDivElement>}
+      className="bg-white border-b border-slate-100 pb-3 mb-2 relative"
+    >
       {/* USER / PROVIDER HEADER */}
       <div className="px-4 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
