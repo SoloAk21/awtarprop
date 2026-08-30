@@ -1,115 +1,110 @@
 import { prisma } from "../../config/db.js";
 import { Prisma } from "@prisma/client";
 
+const propertyInclude = {
+  images: {
+    orderBy: { order: "asc" as const },
+  },
+  provider: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      username: true,
+      phoneNumber: true,
+      providerType: true,
+    },
+  },
+} satisfies Prisma.PropertyListingInclude;
+
 export class PropertyRepository {
+  /**
+   * Create a property listing.
+   */
   public async create(data: Prisma.PropertyListingCreateInput) {
     return prisma.propertyListing.create({
       data,
-      include: {
-        images: {
-          orderBy: { order: "asc" },
-        },
-        provider: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            username: true,
-            phoneNumber: true,
-            providerType: true,
-          },
-        },
-      },
+      include: propertyInclude,
     });
   }
 
+  /**
+   * Find a property listing by ID.
+   */
   public async findById(id: string) {
     return prisma.propertyListing.findUnique({
       where: { id },
-      include: {
-        images: {
-          orderBy: { order: "asc" },
-        },
-        provider: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            username: true,
-            phoneNumber: true,
-            providerType: true,
-          },
-        },
-      },
+      include: propertyInclude,
     });
   }
 
+  /**
+   * Find properties using Prisma filters.
+   *
+   * The `where` object can contain filters generated from
+   * normal search parameters or AI-parsed natural language.
+   */
   public async findMany(
-    where: Prisma.PropertyListingWhereInput,
+    where: Prisma.PropertyListingWhereInput = {},
     limit = 20,
     offset = 0,
   ) {
     const [total, properties] = await Promise.all([
-      prisma.propertyListing.count({ where }),
+      prisma.propertyListing.count({
+        where,
+      }),
+
       prisma.propertyListing.findMany({
         where,
         take: limit,
         skip: offset,
-        orderBy: { createdAt: "desc" },
-        include: {
-          images: {
-            orderBy: { order: "asc" },
-          },
-          provider: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              username: true,
-              phoneNumber: true,
-              providerType: true,
-            },
-          },
+        orderBy: {
+          createdAt: "desc",
         },
+        include: propertyInclude,
       }),
     ]);
 
-    console.log(
-      "[PropertyRepository.findMany] Total count:",
+    return {
       total,
-      "properties count:",
-      properties.length,
-    );
-    if (properties.length > 0) {
-      console.log(
-        "[PropertyRepository.findMany] Property 0 ID:",
-        properties[0].id,
-        "Images count:",
-        properties[0].images?.length,
-        "Sample image:",
-        properties[0].images?.[0],
-      );
-    }
-
-    return { total, properties };
+      properties,
+    };
   }
 
+  /**
+   * Find all properties belonging to a provider.
+   */
   public async findByProviderId(providerId: string) {
     return prisma.propertyListing.findMany({
-      where: { providerId },
-      orderBy: { createdAt: "desc" },
+      where: {
+        providerId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
       include: {
         images: {
-          orderBy: { order: "asc" },
+          orderBy: {
+            order: "asc",
+          },
         },
       },
     });
   }
 
+  /**
+   * Increment property view count.
+   */
   public async incrementViews(id: string) {
     return prisma.propertyListing.update({
-      where: { id },
-      data: { viewsCount: { increment: 1 } },
+      where: {
+        id,
+      },
+      data: {
+        viewsCount: {
+          increment: 1,
+        },
+      },
     });
   }
 }
