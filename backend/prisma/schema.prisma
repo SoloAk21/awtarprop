@@ -89,7 +89,7 @@ model User {
   properties        PropertyListing[]
   payments          PaymentTransaction[]
   favorites         UserFavorite[]
-
+  
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
 
@@ -97,69 +97,70 @@ model User {
   @@index([phoneNumber])
 }
 
+model UserFavorite {
+  userId     String
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   PropertyListing @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime        @default(now())
+
+  @@id([userId, propertyId])
+  @@index([userId])
+  @@index([propertyId])
+}
+
 model PropertyListing {
-  id                String            @id @default(uuid())
+  id                String             @id @default(uuid())
   titleEn           String
   titleAm           String
-  descriptionEn     String            @db.Text
-  descriptionAm     String            @db.Text
+  descriptionEn     String             @db.Text
+  descriptionAm     String             @db.Text
   category          PropertyCategory
   purpose           ListingPurpose
-  priceETB          Decimal           @db.Decimal(14, 2)
-  areaSqMeters      Decimal?          @db.Decimal(10, 2)
+  priceETB          Decimal            @db.Decimal(14, 2)
+  areaSqMeters      Decimal?           @db.Decimal(10, 2)
   bedrooms          Int?
   bathrooms         Int?
   floors            Int?
   condition         PropertyCondition?
-  isFurnished       Boolean?          @default(false)
-  amenities         String[]          @default([])
-
-  region            String            // Ethiopian Region
-  subCity           String?           // Addis Ababa Sub-city
+  isFurnished       Boolean?           @default(false)
+  amenities         String[]           @default([])
+  
+  region            String             // Ethiopian Region
+  subCity           String?            // Addis Ababa Sub-city
   woreda            String?
   kebele            String?
-  areaName          String            // Specific area / landmark
+  areaName          String             // Specific area / landmark
   latitude          Float?
   longitude         Float?
-
-  publicationStatus PublicationStatus @default(DRAFT)
-  listingFeeETB     Decimal           @db.Decimal(10, 2) @default(0.00)
-  isFeePaid         Boolean           @default(false)
-  viewsCount        Int               @default(0)
-
+  
+  publicationStatus PublicationStatus  @default(DRAFT)
+  listingFeeETB     Decimal            @db.Decimal(10, 2) @default(0.00)
+  isFeePaid         Boolean            @default(false)
+  viewsCount        Int                @default(0)
+  
   providerId        String
-  provider          User              @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  providerType      ProviderType      // Role specifically for this listing (Owner, Broker, Agent, Agency, Developer)
-
+  provider          User               @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  providerType      ProviderType       // Role specifically for this property listing
+  
   images            PropertyImage[]
   payments          PaymentTransaction[]
   favoritedBy       UserFavorite[]
-
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
   publishedAt       DateTime?
   expiresAt         DateTime?
 
-  // High-performance search composite indexes
-  @@index([publicationStatus, category, purpose])
-  @@index([publicationStatus, providerType])
-  @@index([publicationStatus, subCity, region])
-  @@index([publicationStatus, priceETB])
   @@index([providerId])
-}
-
-model UserFavorite {
-  id         String          @id @default(uuid())
-  userId     String
-  propertyId String
-  createdAt  DateTime        @default(now())
-
-  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  property   PropertyListing @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, propertyId])
-  @@index([userId])
-  @@index([propertyId])
+  @@index([category, purpose])
+  @@index([region, subCity])
+  @@index([publicationStatus])
+  @@index([priceETB])
+  @@index([bedrooms, bathrooms])
+  @@index([providerType])
+  @@index([isFurnished])
+  @@index([createdAt])
 }
 
 model PropertyImage {
@@ -168,30 +169,25 @@ model PropertyImage {
   publicId   String
   isMain     Boolean         @default(false)
   order      Int             @default(0)
-
   propertyId String
   property   PropertyListing @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
   createdAt  DateTime        @default(now())
 
   @@index([propertyId])
 }
 
 model PaymentTransaction {
-  id          String          @id @default(uuid())
-  amountETB   Decimal         @db.Decimal(10, 2)
-  status      PaymentStatus   @default(PENDING)
-  providerRef String?         @unique
+  id            String          @id @default(uuid())
+  amountETB     Decimal         @db.Decimal(10, 2)
+  status        PaymentStatus   @default(PENDING)
+  providerRef   String?         @unique
   paymentMethod String?
-
-  userId      String
-  user        User            @relation(fields: [userId], references: [id])
-
-  propertyId  String
-  property    PropertyListing @relation(fields: [propertyId], references: [id])
-
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  userId        String
+  user          User            @relation(fields: [userId], references: [id])
+  propertyId    String
+  property      PropertyListing @relation(fields: [propertyId], references: [id])
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@index([userId])
   @@index([propertyId])

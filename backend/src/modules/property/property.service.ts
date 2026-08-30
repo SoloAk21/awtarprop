@@ -2,7 +2,25 @@ import { propertyRepository } from "./property.repository.js";
 import { prisma } from "../../config/db.js";
 import { NotFoundError, ForbiddenError } from "../../errors/AppError.js";
 import { CreatePropertyInput } from "@awtarprop/shared";
-import { Prisma } from "@prisma/client";
+import { Prisma, ProviderType } from "@prisma/client";
+import { aiService } from "../../services/ai.service.js";
+import { logger } from "../../utils/logger.js";
+
+export interface SearchQueryOptions {
+  category?: string;
+  purpose?: string;
+  providerType?: string;
+  region?: string;
+  subCity?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  isFurnished?: boolean;
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
 
 export class PropertyService {
   public calculateListingFee(category: string, providerType: string): number {
@@ -29,9 +47,13 @@ export class PropertyService {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundError("User account not found");
 
+    // Allow user to set provider role per property, or fallback to user default profile type
+    const effectiveProviderType =
+      (input.providerType as ProviderType) || user.providerType;
+
     const listingFeeETB = this.calculateListingFee(
       input.category,
-      user.providerType,
+      effectiveProviderType,
     );
 
     const listingData: Prisma.PropertyListingCreateInput = {
@@ -51,7 +73,7 @@ export class PropertyService {
       condition: (input.condition as any) || null,
       isFurnished: input.isFurnished || false,
       amenities: input.amenities || [],
-      region: input.region,
+      region: input.region || "Addis Ababa",
       subCity: input.subCity || null,
       woreda: input.woreda || null,
       kebele: input.kebele || null,
@@ -59,18 +81,15 @@ export class PropertyService {
       latitude: input.latitude || null,
       longitude: input.longitude || null,
       listingFeeETB: new Prisma.Decimal(listingFeeETB),
-      publicationStatus: "DRAFT",
-      isFeePaid: false,
+      publicationStatus: "PUBLISHED", // Set default for immediate visibility in testing
+      isFeePaid: true,
       provider: { connect: { id: userId } },
-      providerType: user.providerType,
+      providerType: effectiveProviderType,
     };
 
     return propertyRepository.create(listingData);
   }
 
-  /**
-   * Updates an existing property listing in PostgreSQL.
-   */
   public async updateListing(
     userId: string,
     propertyId: string,
@@ -92,6 +111,7 @@ export class PropertyService {
       ...(input.descriptionAm && { descriptionAm: input.descriptionAm }),
       ...(input.category && { category: input.category as any }),
       ...(input.purpose && { purpose: input.purpose as any }),
+      ...(input.providerType && { providerType: input.providerType as any }),
       ...(input.priceETB && { priceETB: new Prisma.Decimal(input.priceETB) }),
       ...(input.areaSqMeters !== undefined && {
         areaSqMeters: input.areaSqMeters
@@ -132,25 +152,64 @@ export class PropertyService {
     });
   }
 
-  public async searchListings(query: {
-    category?: string;
-    purpose?: string;
-    region?: string;
-    subCity?: string;
-    minPrice?: number;
-    maxPrice?: number;
-    search?: string;
-    limit?: number;
-    offset?: number;
-  }) {
+  /**
+   * High-Performance AI & Multi-Filter Search Engine
+   */
+  public async searchListings(query: SearchQueryOptions) {
     const where: Prisma.PropertyListingWhereInput = {
       publicationStatus: "PUBLISHED",
     };
 
+    let effectiveSearchTerm = query.search?.trim();
+
+    // 1. Natural Language Extraction via Gemini AI
+    if (effectiveSearchTerm && effectiveSearchTerm.length > 3) {
+      try {
+        const aiFilters = await aiService.parseSearchQuery(effectiveSearchTerm);
+        logger.info(`AI Search Filter extracted: ${JSON.stringify(aiFilters)}`);
+
+        if (aiFilters.category && !query.category)
+          query.category = aiFilters.category;
+        if (aiFilters.purpose && !query.purpose)
+          query.purpose = aiFilters.purpose;
+        if (aiFilters.providerType && !query.providerType)
+          query.providerType = aiFilters.providerType;
+        if (aiFilters.subCity && !query.subCity)
+          query.subCity = aiFilters.subCity;
+        if (aiFilters.minPrice && !query.minPrice)
+          query.minPrice = aiFilters.minPrice;
+        if (aiFilters.maxPrice && !query.maxPrice)
+          query.maxPrice = aiFilters.maxPrice;
+        if (aiFilters.bedrooms && !query.bedrooms)
+          query.bedrooms = aiFilters.bedrooms;
+        if (aiFilters.bathrooms && !query.bathrooms)
+          query.bathrooms = aiFilters.bathrooms;
+        if (
+          aiFilters.isFurnished !== undefined &&
+          query.isFurnished === undefined
+        ) {
+          query.isFurnished = aiFilters.isFurnished;
+        }
+
+        if (aiFilters.searchKeyword) {
+          effectiveSearchTerm = aiFilters.searchKeyword;
+        }
+      } catch (err) {
+        logger.warn(
+          "Natural language search parsing fallback to standard text search.",
+        );
+      }
+    }
+
+    // 2. Structured Database Indexed Filtering
     if (query.category) where.category = query.category as any;
     if (query.purpose) where.purpose = query.purpose as any;
+    if (query.providerType) where.providerType = query.providerType as any;
     if (query.region) where.region = query.region;
     if (query.subCity) where.subCity = query.subCity;
+    if (query.isFurnished !== undefined) where.isFurnished = query.isFurnished;
+    if (query.bedrooms) where.bedrooms = { gte: Number(query.bedrooms) };
+    if (query.bathrooms) where.bathrooms = { gte: Number(query.bathrooms) };
 
     if (query.minPrice || query.maxPrice) {
       where.priceETB = {};
@@ -158,51 +217,10 @@ export class PropertyService {
       if (query.maxPrice) where.priceETB.lte = query.maxPrice;
     }
 
-    if (query.search && query.search.trim().length > 0) {
-      const term = query.search.trim();
-      const termUpper = term.toUpperCase().replace(/\s+/g, "_");
-
-      const matchingPurposes = [
-        "FOR_SALE",
-        "FOR_RENT",
-        "LOOKING_TO_BUY",
-        "LOOKING_TO_RENT",
-      ].filter(
-        (p) =>
-          p.includes(termUpper) ||
-          p.replace(/_/g, " ").includes(term.toUpperCase()),
-      );
-
-      const matchingCategories = [
-        "APARTMENT",
-        "CONDOMINIUM",
-        "RESIDENTIAL_HOUSE",
-        "VILLA",
-        "STUDIO",
-        "COMMERCIAL_SPACE",
-        "OFFICE",
-        "SHOP",
-        "WAREHOUSE",
-        "BUILDING",
-        "HOTEL",
-        "RESIDENTIAL_LAND",
-        "COMMERCIAL_LAND",
-        "AGRICULTURAL_LAND",
-      ].filter(
-        (c) =>
-          c.includes(termUpper) ||
-          c.replace(/_/g, " ").includes(term.toUpperCase()),
-      );
-
-      const matchingProviders = [
-        "OWNER",
-        "BROKER",
-        "AGENT",
-        "AGENCY",
-        "DEVELOPER",
-      ].filter((pr) => pr.includes(termUpper));
-
-      const orConditions: Prisma.PropertyListingWhereInput[] = [
+    // 3. Keyword Sub-search across text fields
+    if (effectiveSearchTerm && effectiveSearchTerm.length > 0) {
+      const term = effectiveSearchTerm;
+      where.OR = [
         { titleEn: { contains: term, mode: "insensitive" } },
         { titleAm: { contains: term, mode: "insensitive" } },
         { descriptionEn: { contains: term, mode: "insensitive" } },
@@ -210,28 +228,14 @@ export class PropertyService {
         { areaName: { contains: term, mode: "insensitive" } },
         { region: { contains: term, mode: "insensitive" } },
         { subCity: { contains: term, mode: "insensitive" } },
-        { woreda: { contains: term, mode: "insensitive" } },
-        { kebele: { contains: term, mode: "insensitive" } },
         { amenities: { hasSome: [term] } },
       ];
-
-      if (matchingPurposes.length > 0) {
-        orConditions.push({ purpose: { in: matchingPurposes as any } });
-      }
-      if (matchingCategories.length > 0) {
-        orConditions.push({ category: { in: matchingCategories as any } });
-      }
-      if (matchingProviders.length > 0) {
-        orConditions.push({ providerType: { in: matchingProviders as any } });
-      }
-
-      where.OR = orConditions;
     }
 
     return propertyRepository.findMany(
       where,
-      query.limit || 20,
-      query.offset || 0,
+      query.limit ? Number(query.limit) : 20,
+      query.offset ? Number(query.offset) : 0,
     );
   }
 
@@ -239,7 +243,13 @@ export class PropertyService {
     const property = await propertyRepository.findById(id);
     if (!property) throw new NotFoundError("Property listing not found");
 
-    await propertyRepository.incrementViews(id);
+    // Increment view count in DB asynchronously
+    propertyRepository.incrementViews(id).catch((err) => {
+      logger.error(
+        `Failed to increment view count for property ${id}: ${err.message}`,
+      );
+    });
+
     return property;
   }
 

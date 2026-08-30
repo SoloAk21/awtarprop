@@ -11,6 +11,11 @@ export interface PropertyQueryFilters {
   search?: string;
   limit?: number;
   offset?: number;
+  // New properties added for advanced search
+  providerType?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  isFurnished?: boolean;
 }
 
 export async function fetchProperties(filters: PropertyQueryFilters = {}) {

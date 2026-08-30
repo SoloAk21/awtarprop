@@ -97,7 +97,9 @@ function FilterSearchSelect({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("searchPlaceholder" as LanguageKey)}
+              placeholder={
+                t("searchPlaceholder" as LanguageKey) || "Search options..."
+              }
               autoFocus
               className="w-full bg-transparent text-xs font-normal text-slate-800 outline-none placeholder:text-slate-400"
             />
@@ -139,7 +141,7 @@ function FilterSearchSelect({
               })
             ) : (
               <div className="px-3 py-2 text-center text-xs text-slate-400">
-                {t("noMatchingResults" as LanguageKey)}
+                {t("noMatchingResults" as LanguageKey) || "No results found"}
               </div>
             )}
           </div>
@@ -159,6 +161,7 @@ export function HomePage() {
   const [purpose, setPurpose] = useState("");
   const [category, setCategory] = useState("");
   const [subCity, setSubCity] = useState("");
+  const [providerType, setProviderType] = useState("");
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
@@ -168,6 +171,7 @@ export function HomePage() {
     purpose: purpose || undefined,
     category: category || undefined,
     subCity: subCity || undefined,
+    providerType: providerType || undefined,
     limit: 20,
   });
 
@@ -186,9 +190,21 @@ export function HomePage() {
     title: "",
   });
 
+  const providerRoleFilters = useMemo(
+    () => [
+      { value: "", label: "All Roles" },
+      { value: "OWNER", label: "Owner" },
+      { value: "BROKER", label: "Broker" },
+      { value: "AGENT", label: "Agent" },
+      { value: "AGENCY", label: "Agency" },
+      { value: "DEVELOPER", label: "Developer" },
+    ],
+    [],
+  );
+
   const categoryStoryPills = useMemo(
     () => [
-      { id: "", label: t("allCategories" as LanguageKey) },
+      { id: "", label: t("allCategories" as LanguageKey) || "All Categories" },
       { id: "APARTMENT", label: translateCategory("APARTMENT") },
       { id: "CONDOMINIUM", label: translateCategory("CONDOMINIUM") },
       {
@@ -203,18 +219,27 @@ export function HomePage() {
 
   const purposeTabs = useMemo(
     () => [
-      { value: "", label: t("allPurposes" as LanguageKey) },
-      { value: "FOR_SALE", label: t("FOR_SALE" as LanguageKey) },
-      { value: "FOR_RENT", label: t("FOR_RENT" as LanguageKey) },
-      { value: "LOOKING_TO_BUY", label: t("LOOKING_TO_BUY" as LanguageKey) },
-      { value: "LOOKING_TO_RENT", label: t("LOOKING_TO_RENT" as LanguageKey) },
+      { value: "", label: t("allPurposes" as LanguageKey) || "All Purposes" },
+      { value: "FOR_SALE", label: t("FOR_SALE" as LanguageKey) || "For Sale" },
+      { value: "FOR_RENT", label: t("FOR_RENT" as LanguageKey) || "For Rent" },
+      {
+        value: "LOOKING_TO_BUY",
+        label: t("LOOKING_TO_BUY" as LanguageKey) || "Looking to Buy",
+      },
+      {
+        value: "LOOKING_TO_RENT",
+        label: t("LOOKING_TO_RENT" as LanguageKey) || "Looking to Rent",
+      },
     ],
     [t],
   );
 
   const categoryOptions = useMemo(
     () => [
-      { value: "", label: t("allCategories" as LanguageKey) },
+      {
+        value: "",
+        label: t("allCategories" as LanguageKey) || "All Categories",
+      },
       { value: "APARTMENT", label: translateCategory("APARTMENT") },
       { value: "CONDOMINIUM", label: translateCategory("CONDOMINIUM") },
       {
@@ -243,13 +268,18 @@ export function HomePage() {
 
   const subCityOptions = useMemo(
     () => [
-      { value: "", label: t("allSubCities" as LanguageKey) },
+      {
+        value: "",
+        label: t("allSubCities" as LanguageKey) || "All Sub-cities",
+      },
       ...ADDIS_ABABA_SUBCITIES.map((sc) => ({ value: sc, label: sc })),
     ],
     [t],
   );
 
-  const activeFilterCount = [purpose, category, subCity].filter(Boolean).length;
+  const activeFilterCount = [purpose, category, subCity, providerType].filter(
+    Boolean,
+  ).length;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -262,6 +292,7 @@ export function HomePage() {
     setPurpose("");
     setCategory("");
     setSubCity("");
+    setProviderType("");
   };
 
   const handleOpenImageIndex = useCallback((property: any, index: number) => {
@@ -274,18 +305,21 @@ export function HomePage() {
   }, []);
 
   return (
-    <div className="w-full  pb-24 text-slate-800">
+    <div className="w-full pb-24 text-slate-800">
       {/* Hero Banner */}
       <div className="p-3.5 pb-2">
         <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 text-white p-4 rounded-2xl shadow-sm space-y-2.5">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-medium backdrop-blur-md">
             <Sparkles className="w-3 h-3 text-emerald-200" />
-            <span>{t("directConnect" as LanguageKey)}</span>
+            <span>
+              {t("directConnect" as LanguageKey) || "Connect Directly"}
+            </span>
           </div>
 
           <div className="space-y-0.5">
             <h2 className="text-base font-extrabold tracking-tight leading-snug">
-              {t("appSubtitle" as LanguageKey)}
+              {t("appSubtitle" as LanguageKey) ||
+                "Find your next home in Addis Ababa"}
             </h2>
           </div>
 
@@ -295,7 +329,7 @@ export function HomePage() {
               className="w-full py-2 bg-white text-emerald-900 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs hover:bg-emerald-50 transition-colors"
             >
               <PlusCircle className="w-3.5 h-3.5 text-emerald-700" />
-              <span>{t("postListing" as LanguageKey)}</span>
+              <span>{t("postListing" as LanguageKey) || "Post a Listing"}</span>
             </button>
           </div>
         </div>
@@ -313,8 +347,8 @@ export function HomePage() {
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder={t("searchPlaceholder" as LanguageKey)}
-              className="w-full h-9 pl-8 pr-3 text-xs bg-slate-50/80 border border-slate-200 rounded-xl font-medium focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all placeholder:text-slate-400"
+              placeholder="Search e.g. '3 bed apartment in Bole'..."
+              className="w-full h-9 pl-8 pr-8 text-xs bg-slate-50/80 border border-slate-200 rounded-xl font-medium focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all placeholder:text-slate-400"
             />
             {searchInput && (
               <button
@@ -385,7 +419,7 @@ export function HomePage() {
           <div className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-2xl space-y-3 animate-in fade-in duration-150">
             <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
               <span className="text-xs font-extrabold text-slate-900">
-                {t("filterProperties" as LanguageKey)}
+                {t("filterProperties" as LanguageKey) || "Filter Properties"}
               </span>
               <button
                 type="button"
@@ -393,14 +427,15 @@ export function HomePage() {
                 className="text-[11px] font-bold text-emerald-700 flex items-center gap-1 hover:underline"
               >
                 <RotateCcw className="w-3 h-3" />
-                <span>{t("resetAll" as LanguageKey)}</span>
+                <span>{t("resetAll" as LanguageKey) || "Reset All"}</span>
               </button>
             </div>
 
-            <div className="space-y-2.5">
+            <div className="space-y-3">
+              {/* Purpose Selection */}
               <div>
                 <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
-                  {t("purposeLabel" as LanguageKey)}
+                  {t("purposeLabel" as LanguageKey) || "Purpose"}
                 </label>
                 <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-none">
                   {purposeTabs.map((p) => (
@@ -420,6 +455,30 @@ export function HomePage() {
                 </div>
               </div>
 
+              {/* Provider Role Selection */}
+              <div>
+                <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
+                  Provider Role
+                </label>
+                <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-none">
+                  {providerRoleFilters.map((role) => (
+                    <button
+                      key={role.value}
+                      type="button"
+                      onClick={() => setProviderType(role.value)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors shrink-0 ${
+                        providerType === role.value
+                          ? "bg-emerald-600 text-white border-emerald-600"
+                          : "bg-white text-slate-600 border-slate-200"
+                      }`}
+                    >
+                      {role.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Advanced Dropdowns */}
               <FilterSearchSelect
                 label={
                   t("propertyCategoryLabel" as LanguageKey) ||
@@ -428,7 +487,9 @@ export function HomePage() {
                 options={categoryOptions}
                 value={category}
                 onChange={(val) => setCategory(val)}
-                placeholder={t("allCategories" as LanguageKey)}
+                placeholder={
+                  t("allCategories" as LanguageKey) || "All Categories"
+                }
               />
 
               <FilterSearchSelect
@@ -436,7 +497,9 @@ export function HomePage() {
                 options={subCityOptions}
                 value={subCity}
                 onChange={(val) => setSubCity(val)}
-                placeholder={t("allSubCities" as LanguageKey)}
+                placeholder={
+                  t("allSubCities" as LanguageKey) || "All Sub-cities"
+                }
               />
             </div>
           </div>
@@ -448,7 +511,7 @@ export function HomePage() {
         <div className="py-20 flex flex-col items-center justify-center gap-2 text-slate-400">
           <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
           <span className="text-xs font-medium">
-            {t("loadingFeed" as LanguageKey)}
+            {t("loadingFeed" as LanguageKey) || "Loading properties..."}
           </span>
         </div>
       ) : viewMode === "map" ? (
@@ -461,7 +524,10 @@ export function HomePage() {
       ) : properties.length === 0 ? (
         <div className="p-8 mx-3.5 mt-2 bg-slate-50/50 rounded-2xl text-center border border-slate-100 space-y-1">
           <p className="text-xs font-bold text-slate-700">
-            {t("noListingsFound" as LanguageKey)}
+            {t("noListingsFound" as LanguageKey) || "No listings found"}
+          </p>
+          <p className="mt-1 text-[11px] text-slate-400">
+            Try adjusting your natural language search terms or filters.
           </p>
         </div>
       ) : (
