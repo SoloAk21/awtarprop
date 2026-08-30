@@ -75,22 +75,23 @@ enum PaymentStatus {
 }
 
 model User {
-  id                String            @id @default(uuid())
-  telegramId        BigInt            @unique
+  id                String               @id @default(uuid())
+  telegramId        BigInt               @unique
   firstName         String
   lastName          String?
   username          String?
-  phoneNumber       String?           @unique
-  isPhoneVerified   Boolean           @default(false)
-  role              UserRole          @default(USER)
-  providerType      ProviderType      @default(OWNER)
-  preferredLanguage PreferredLanguage @default(EN)
+  phoneNumber       String?              @unique
+  isPhoneVerified   Boolean              @default(false)
+  role              UserRole             @default(USER)
+  providerType      ProviderType         @default(OWNER)
+  preferredLanguage PreferredLanguage    @default(EN)
   
   properties        PropertyListing[]
   payments          PaymentTransaction[]
+  favorites         UserFavorite[]
 
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
 
   @@index([telegramId])
   @@index([phoneNumber])
@@ -128,20 +129,37 @@ model PropertyListing {
 
   providerId        String
   provider          User              @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  providerType      ProviderType
+  providerType      ProviderType      // Role specifically for this listing (Owner, Broker, Agent, Agency, Developer)
 
   images            PropertyImage[]
   payments          PaymentTransaction[]
+  favoritedBy       UserFavorite[]
 
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   publishedAt       DateTime?
   expiresAt         DateTime?
 
+  // High-performance search composite indexes
+  @@index([publicationStatus, category, purpose])
+  @@index([publicationStatus, providerType])
+  @@index([publicationStatus, subCity, region])
+  @@index([publicationStatus, priceETB])
   @@index([providerId])
-  @@index([category, purpose])
-  @@index([region, subCity])
-  @@index([publicationStatus])
+}
+
+model UserFavorite {
+  id         String          @id @default(uuid())
+  userId     String
+  propertyId String
+  createdAt  DateTime        @default(now())
+
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   PropertyListing @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId])
+  @@index([userId])
+  @@index([propertyId])
 }
 
 model PropertyImage {
@@ -160,20 +178,20 @@ model PropertyImage {
 }
 
 model PaymentTransaction {
-  id            String        @id @default(uuid())
-  amountETB     Decimal       @db.Decimal(10, 2)
-  status        PaymentStatus @default(PENDING)
-  providerRef   String?       @unique
+  id          String          @id @default(uuid())
+  amountETB   Decimal         @db.Decimal(10, 2)
+  status      PaymentStatus   @default(PENDING)
+  providerRef String?         @unique
   paymentMethod String?
 
-  userId        String
-  user          User            @relation(fields: [userId], references: [id])
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
 
-  propertyId    String
-  property      PropertyListing @relation(fields: [propertyId], references: [id])
+  propertyId  String
+  property    PropertyListing @relation(fields: [propertyId], references: [id])
 
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   @@index([userId])
   @@index([propertyId])
